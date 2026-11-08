@@ -42,16 +42,28 @@ export default function Ringkasan({ data, go }) {
   return (
     <div className="page">
       <header className="ph">
-        <div><h1>Ringkasan Nasional</h1><p>Kondisi ruang kelas SD, SMP, SMA, dan SMK tahun 2025 serta hasil utama analisis ATLAS-Kelas.</p></div>
+        <div><h1>Ringkasan Nasional</h1><p>Potret kebutuhan revitalisasi sekolah Indonesia dari data 2025.</p></div>
         <button className="btn primary sm" onClick={() => go('peta')}>Buka peta <ArrowUpRight size={15} /></button>
       </header>
+
+      <section className="prisma-hero">
+        <div className="prisma-hero-copy">
+          <span className="eyebrow">KEPUTUSAN BERBASIS BUKTI · 514 KABUPATEN/KOTA</span>
+          <h2>Pemerataan bukan sekadar membagi rata.</h2>
+          <p>PRISMA memadukan kondisi ruang kelas, kerentanan sosial, dan kapasitas fiskal untuk menunjukkan wilayah yang perlu didahulukan—secara transparan dan dapat ditelusuri.</p>
+        </div>
+        <div className="allocation-paths">
+          <div><span className="path-mark volume">01</span><div><b>Jalur kebutuhan</b><small>Menjangkau kerusakan berat terbanyak.</small></div></div>
+          <div><span className="path-mark prisma">02</span><div><b>Jalur afirmasi PRISMA</b><small>Mengutamakan tingkat kerusakan dan kerentanan.</small></div></div>
+        </div>
+      </section>
 
       <div className="kpis">
         <Kpi i={0} icon={School} label="Ruang kelas" value={fmtInt(tot.jumlah)} sub="Dapodik 2025, 4 jenjang" />
         <Kpi i={1} icon={AlertTriangle} tone="warn" label="Rusak sedang + berat" value={`${fmt(tot.pct_sedang_berat)}%`} sub={`${fmtInt(tot.rusak_sedang + tot.rusak_berat)} ruang`} />
         <Kpi i={2} icon={AlertTriangle} tone="crit" label="Rusak berat" value={fmtInt(tot.rusak_berat)} sub={`${fmt(tot.pct_berat)}% dari total`} />
         <Kpi i={3} icon={Network} label="Moran's I" value={fmt(R.moran.I, 3)} sub="Kerusakan mengelompok (p < 0,001)" />
-        <Kpi i={4} icon={Target} tone="accent" label="Daerah prioritas" value={prioritas} sub="Kuintil teratas IPRT" />
+        <Kpi i={4} icon={Target} tone="accent" label="Daerah prioritas" value={prioritas} sub="Kuintil teratas PRISMA" />
       </div>
 
       <div className="grid2">
@@ -94,7 +106,7 @@ export default function Ringkasan({ data, go }) {
 
       <div className="grid2">
         <section className="card">
-          <h3>10 kabupaten/kota dengan skor IPRT tertinggi</h3>
+          <h3>10 kabupaten/kota dengan skor PRISMA tertinggi</h3>
           <p className="muted">Klik untuk melihat di peta</p>
           <ol className="rank">
             {top.map((d, i) => {
@@ -129,8 +141,8 @@ export default function Ringkasan({ data, go }) {
       <section className="card insight">
         <MapPinned size={20} />
         <div>
-          <b>Temuan kunci.</b> Pendekatan volume memilih 45,6% sasaran di Jawa. IPRT mengalihkan prioritas ke daerah dengan kerusakan relatif lebih parah dan 92,2% berkapasitas fiskal rendah. Hanya {R.simulasi.irisan} dari {R.simulasi.n_top} daerah muncul di kedua daftar, sehingga ATLAS-Kelas mengusulkan alokasi <b>dua jalur</b>: jalur kebutuhan absolut dan jalur afirmasi IPRT.
-          <button className="link" onClick={() => go('simulator')}>Coba simulatornya →</button>
+          <b>Temuan kunci.</b> Pendekatan volume memilih 45,6% sasaran di Jawa. PRISMA mengalihkan prioritas ke daerah dengan kerusakan relatif lebih parah dan 92,2% berkapasitas fiskal rendah. Hanya {R.simulasi.irisan} dari {R.simulasi.n_top} daerah muncul di kedua daftar, sehingga PRISMA mengusulkan alokasi <b>dua jalur</b>: jalur kebutuhan absolut dan jalur afirmasi berbasis analisis spasial.
+          <button className="link" onClick={() => go('simulator')}>Coba simulasi dua jalur →</button>
         </div>
       </section>
     </div>

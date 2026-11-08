@@ -50,7 +50,7 @@ export default function Analisis({ data }) {
           </ResponsiveContainer>
         </section>
         <section className="card">
-          <h3>3 · Ketahanan IPRT</h3>
+          <h3>3 · Ketahanan indeks PRISMA</h3>
           <p className="muted">1.000 bobot acak Dirichlet(8, 6, 6)</p>
           <div className="stats">
             <Stat k="Median Kendall τ" v={fmt(R.iprt.sensitivitas.kendall_tau_median, 3)} />

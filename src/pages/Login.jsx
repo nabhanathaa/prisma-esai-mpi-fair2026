@@ -31,8 +31,10 @@ export default function Login({ onLogin }) {
       </div>
       <motion.section className="login-hero" initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .6 }}>
         <div className="tag">Revitalisasi Satuan Pendidikan · Data 2025</div>
-        <h1>ATLAS<span>-Kelas</span></h1>
-        <p className="lead">Analitik Terpadu Lokasi dan Alokasi Sekolah. Menentukan kabupaten/kota yang paling membutuhkan revitalisasi ruang kelas secara adil, transparan, dan dapat diaudit.</p>
+        <h1>PRISMA</h1>
+        <p className="lead">Indeks Prioritas Revitalisasi Sekolah berbasis Analisis Spasial untuk mewujudkan infrastruktur pendidikan yang adil, tangguh, inklusif, dan berkelanjutan di Indonesia.</p>
+        <p className="acronym">Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial</p>
+        <div className="hero-promise"><span>Adil</span><i /><span>Tangguh</span><i /><span>Inklusif</span><i /><span>Berkelanjutan</span></div>
         <div className="hero-stats">
           {[['2,03 jt', 'ruang kelas dianalisis'], ['514', 'kabupaten/kota'], ['29,8%', 'rusak sedang + berat']].map(([a, b], i) => (
             <motion.div key={b} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 + i * .12 }}>

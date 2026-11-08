@@ -1,7 +1,7 @@
 ---
-title: "ATLAS-Kelas: Analisis Kondisi Ruang Kelas dan Indeks Prioritas Revitalisasi Tangguh (IPRT)"
+title: "PRISMA: Indeks Prioritas Revitalisasi Sekolah Berbasis Analisis Spasial"
 subtitle: "Data 2025, 514 kabupaten/kota, jenjang SD, SMP, SMA, SMK"
-author: "Tim ATLAS-Kelas, Politeknik Statistika STIS"
+author: "Tim PRISMA"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
@@ -29,7 +29,7 @@ Dokumen ini membaca satu workbook (`data/ATLAS_Kelas_Dataset_2025.xlsx`) dan sat
 | 3 | Di mana masalahnya? | Peta tematik, uji Kruskal-Wallis antarpulau | Gambar 2, 3 |
 | 4 | Apakah kerusakan mengelompok? | Moran's I global dan LISA | Gambar 4 |
 | 5 | Siapa yang menanggung beban? | Regresi OLS, uji LM, regresi spasial | Tabel 2 |
-| 6 | Kab/kota mana didahulukan? | Indeks IPRT dan uji sensitivitas bobot | Gambar 5, Tabel 3 |
+| 6 | Kab/kota mana didahulukan? | Indeks PRISMA dan uji sensitivitas bobot | Gambar 5, Tabel 3 |
 | 7 | Apa bedanya dengan pendekatan volume? | Simulasi cakupan alokasi | Gambar 6 |
 | 8 | (Opsional) Seberapa terpapar iklim? | Lapisan GEE: hujan ekstrem, suhu, air permukaan | Tabel iklim |
 | 9 | Data untuk aplikasi dan naskah | Ekspor JSON dan Excel | `output/app_kabkota.json`, `output/app_ringkasan.json`, `output/hasil_analisis_ATLAS.xlsx` |
@@ -282,9 +282,9 @@ kable(tab2, digits = 3, caption = "Tabel 2. Koefisien regresi OLS dan model spas
 rho_lambda
 ```
 
-# Tahap 6. Indeks Prioritas Revitalisasi Tangguh (IPRT)
+# Tahap 6. Skor PRISMA (Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial)
 
-IPRT = 100 x (0,40 K + 0,30 S + 0,30 F), dengan setiap komponen berupa peringkat persentil (0-1):
+Skor PRISMA = 100 x (0,40 K + 0,30 S + 0,30 F), dengan setiap komponen berupa peringkat persentil (0-1):
 
 * **K (kondisi)**: % ruang kelas rusak sedang + berat (makin tinggi makin prioritas).
 * **S (kerentanan sosial)**: rata-rata persentil P0 dan persentil kebalikan RLS.
@@ -304,9 +304,9 @@ top20 <- st_drop_geometry(d) |> arrange(rank_iprt) |>
   select(rank_iprt, nama, provinsi, IPRT, pct_rusak_sedang_berat, p0_persen, rls_tahun,
          rasio_kapasitas_fiskal) |> head(20)
 write.csv(top20, file.path(OUT, "tabel3_top20_iprt.csv"), row.names = FALSE)
-kable(top20, digits = 2, caption = "Tabel 3. Dua puluh kab/kota dengan IPRT tertinggi")
+kable(top20, digits = 2, caption = "Tabel 3. Dua puluh kab/kota dengan skor PRISMA tertinggi")
 prior_pulau <- st_drop_geometry(d) |> filter(kelas_iprt == "Sangat tinggi") |> count(pulau, name = "n_prioritas")
-kable(prior_pulau, caption = "Sebaran kab/kota kelas IPRT 'Sangat tinggi' menurut pulau")
+kable(prior_pulau, caption = "Sebaran kab/kota kelas PRISMA 'Sangat tinggi' menurut pulau")
 ```
 
 ```{r sensitivitas}
@@ -324,8 +324,8 @@ round(sens, 3)
 
 ```{r gambar5, fig.height=5}
 g5 <- ggplot(d) + geom_sf(aes(fill = IPRT), colour = "white", linewidth = .05) +
-  scale_fill_gradientn(colours = c("#EAF4F4", "#A8DADC", "#457B9D", "#F4A261", "#C1121F"), name = "Skor IPRT") +
-  labs(title = "Gambar 5. Indeks Prioritas Revitalisasi Tangguh (IPRT) per kab/kota",
+  scale_fill_gradientn(colours = c("#EAF4F4", "#A8DADC", "#457B9D", "#F4A261", "#C1121F"), name = "Skor PRISMA") +
+  labs(title = "Gambar 5. Skor PRISMA per kab/kota",
        subtitle = "Bobot: kondisi 40%, kerentanan sosial 30%, keterbatasan fiskal 30%",
        caption = "Sumber: Dapodik (2025), BPS (2025), PMK 97/2025; diolah.") +
   coord_sf(datum = NA) + theme_void(base_size = 10) + theme(legend.position = "bottom", legend.key.width = unit(2.2, "cm"),
@@ -334,9 +334,8 @@ g5 <- ggplot(d) + geom_sf(aes(fill = IPRT), colour = "white", linewidth = .05) +
 simpan(g5, "gambar5_peta_iprt", 11, 5)
 ```
 
-# Tahap 7. Simulasi cakupan: IPRT dibandingkan pendekatan volume
-
-Pendekatan volume mengurutkan kab/kota berdasarkan jumlah absolut ruang kelas rusak berat. Pendekatan IPRT mengurutkan berdasarkan skor IPRT. Untuk 20% kab/kota teratas (103 wilayah) dibandingkan cakupan masing-masing.
+# Tahap 7. Simulasi cakupan: PRISMA dibandingkan pendekatan volume
+Pendekatan volume mengurutkan kab/kota berdasarkan jumlah absolut ruang kelas rusak berat. Pendekatan PRISMA mengurutkan berdasarkan skor indeks. Untuk 20% kab/kota teratas (103 wilayah) dibandingkan cakupan masing-masing.
 
 ```{r simulasi}
 dd <- st_drop_geometry(d)
@@ -351,7 +350,7 @@ ringkas <- function(x, nama) tibble(
   median_p0 = median(x$p0_persen),
   pangsa_jawa = 100 * mean(x$pulau == "Jawa"),
   pangsa_papua_maluku_nusa = 100 * mean(x$pulau %in% c("Papua", "Maluku", "Bali-Nusa Tenggara")))
-sim <- bind_rows(ringkas(vol, "Volume (jumlah rusak berat)"), ringkas(ipr, "IPRT"))
+sim <- bind_rows(ringkas(vol, "Volume (jumlah rusak berat)"), ringkas(ipr, "PRISMA"))
 write.csv(sim, file.path(OUT, "tabel4_simulasi.csv"), row.names = FALSE)
 kable(sim, digits = 1, caption = "Tabel 4. Profil 20% kab/kota teratas menurut dua pendekatan")
 irisan <- length(intersect(vol$kode_bps, ipr$kode_bps)); irisan
@@ -365,16 +364,16 @@ sim_long <- sim |> select(pendekatan, `Median % rusak sedang+berat` = median_pct
 g6 <- ggplot(sim_long, aes(x = name, y = value, fill = pendekatan)) +
   geom_col(position = position_dodge(.75), width = .7) +
   geom_text(aes(label = fmt(value, 1)), position = position_dodge(.75), vjust = -.4, size = 3.2) +
-  scale_fill_manual(values = c("IPRT" = "#C1121F", "Volume (jumlah rusak berat)" = "#457B9D"), name = NULL) +
+  scale_fill_manual(values = c("PRISMA" = "#C1121F", "Volume (jumlah rusak berat)" = "#457B9D"), name = NULL) +
   scale_y_continuous(expand = expansion(c(0, .12))) +
-  labs(title = "Gambar 6. Profil 20% kab/kota teratas: IPRT dibandingkan pendekatan volume",
+  labs(title = "Gambar 6. Profil 20% kab/kota teratas: PRISMA dibandingkan pendekatan volume",
        x = NULL, y = NULL, caption = "Sumber: hasil olahan penulis.")
 simpan(g6, "gambar6_simulasi", 9.5, 4.4)
 ```
 
 # Tahap 8 (opsional). Lapisan paparan iklim dari Google Earth Engine
 
-Jika sheet `09_iklim_gee` sudah ditambahkan (keluaran skrip `gee_iklim_kabkota.js`, kolom `kode_bps`, `hari_hujan_ekstrem`, `hari_panas_ekstrem`, `pct_genangan`), chunk berikut menghitung IPRT versi iklim. Bila sheet belum ada, chunk dilewati.
+Jika sheet `09_iklim_gee` sudah ditambahkan (keluaran skrip `gee_iklim_kabkota.js`, kolom `kode_bps`, `hari_hujan_ekstrem`, `hari_panas_ekstrem`, `pct_genangan`), chunk berikut menghitung skor PRISMA versi iklim. Bila sheet belum ada, chunk dilewati.
 
 ```{r iklim, eval = "09_iklim_gee" %in% excel_sheets(DATA)}
 ik <- read_excel(DATA, "09_iklim_gee") |> mutate(kode_bps = as.character(kode_bps))

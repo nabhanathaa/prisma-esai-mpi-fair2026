@@ -3,9 +3,9 @@ const BASE = import.meta.env.BASE_URL
 
 export async function loadAll() {
   const [kab, ringkasan, geo] = await Promise.all([
-    fetch(`${BASE}data/app_kabkota.json`).then(r => r.json()),
-    fetch(`${BASE}data/app_ringkasan.json`).then(r => r.json()),
-    fetch(`${BASE}data/kabkota.geojson`).then(r => r.json()),
+    fetch(`${BASE}data/app_kabkota.json`).then(readJson),
+    fetch(`${BASE}data/app_ringkasan.json`).then(readJson),
+    fetch(`${BASE}data/kabkota.geojson`).then(readJson),
   ])
   const byKode = Object.fromEntries(kab.map(d => [d.kode_bps, d]))
   return { kab, ringkasan, geo, byKode }
@@ -13,13 +13,18 @@ export async function loadAll() {
 
 export const PULAU = ['Sumatera', 'Jawa', 'Bali-Nusa Tenggara', 'Kalimantan', 'Sulawesi', 'Maluku', 'Papua']
 
+async function readJson(response) {
+  if (!response.ok) throw new Error(`Data tidak dapat dimuat (${response.status} ${response.statusText})`)
+  return response.json()
+}
+
 // Ramp sekuensial (gelap -> terang) untuk latar gelap
 export const RAMP_RISK = ['#2A2F45', '#4A3350', '#7A3A52', '#AE4550', '#DB5A45', '#FF8A4C']
 export const RAMP_GOOD = ['#1E3046', '#1F4A63', '#22667F', '#2A8597', '#3FA6AC', '#69C9B9']
 
 // Variabel peta. dir: 'risk' (makin tinggi makin prioritas) / 'good'
 export const VARS = [
-  { key: 'IPRT', label: 'Skor IPRT', unit: '', dec: 1, dir: 'risk', desc: 'Indeks Prioritas Revitalisasi Tangguh (0–100)' },
+  { key: 'IPRT', label: 'Skor PRISMA', unit: '', dec: 1, dir: 'risk', desc: 'Indeks prioritas revitalisasi sekolah berbasis analisis spasial (0–100)' },
   { key: 'pct_rusak_sedang_berat', label: '% Rusak sedang + berat', unit: '%', dec: 1, dir: 'risk', desc: 'Semua jenjang (SD, SMP, SMA, SMK)' },
   { key: 'pct_rusak_berat', label: '% Rusak berat', unit: '%', dec: 1, dir: 'risk', desc: 'Semua jenjang' },
   { key: 'pct_rb_sd', label: '% Rusak berat SD', unit: '%', dec: 1, dir: 'risk', desc: 'Jenjang SD' },
@@ -70,7 +75,8 @@ export function median(arr) {
 
 // Hitung ulang IPRT dengan bobot pengguna (K,S,F sudah berupa persentil 0-1)
 export function recompute(kab, w) {
-  const tot = w.K + w.S + w.F || 1
+  const tot = w.K + w.S + w.F
+  if (tot <= 0) throw new RangeError('Setidaknya satu bobot komponen PRISMA harus lebih dari nol.')
   const scored = kab.map(d => ({ ...d, skor: 100 * (w.K * d.K + w.S * d.S + w.F * d.F) / tot }))
   scored.sort((a, b) => b.skor - a.skor)
   scored.forEach((d, i) => { d.rank = i + 1 })
@@ -78,7 +84,8 @@ export function recompute(kab, w) {
 }
 
 export function simulate(kab, w, n) {
-  const iprt = recompute(kab, w).slice(0, n)
+  const ranking = recompute(kab, w)
+  const iprt = ranking.slice(0, n)
   const vol = [...kab].sort((a, b) => b.rusak_berat_total - a.rusak_berat_total).slice(0, n)
   const totRB = kab.reduce((s, d) => s + d.rusak_berat_total, 0)
   const stats = arr => ({
@@ -91,7 +98,7 @@ export function simulate(kab, w, n) {
   })
   const setV = new Set(vol.map(d => d.kode_bps))
   const irisan = iprt.filter(d => setV.has(d.kode_bps)).length
-  return { iprt, vol, sIPRT: stats(iprt), sVol: stats(vol), irisan }
+  return { iprt, ranking, vol, sIPRT: stats(iprt), sVol: stats(vol), irisan }
 }
 
 export function downloadCSV(rows, cols, name) {

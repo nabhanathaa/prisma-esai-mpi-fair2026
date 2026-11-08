@@ -13,14 +13,14 @@ import Kode from './pages/Kode'
 const NAV = [
   { id: 'ringkasan', label: 'Ringkasan', icon: LayoutDashboard, el: Ringkasan },
   { id: 'peta', label: 'Peta Interaktif', icon: Map, el: Peta },
-  { id: 'simulator', label: 'Prioritas & Simulator', icon: SlidersHorizontal, el: Simulator },
+  { id: 'simulator', label: 'Simulasi Dua Jalur', icon: SlidersHorizontal, el: Simulator },
   { id: 'analisis', label: 'Analisis Statistik', icon: Sigma, el: Analisis },
   { id: 'kode', label: 'Kode Analisis', icon: Code2, el: Kode },
   { id: 'metodologi', label: 'Metodologi & Data', icon: BookOpen, el: Metodologi },
 ]
 
 function readSession() {
-  try { return JSON.parse(sessionStorage.getItem('atlas_user') || 'null') } catch { return null }
+  try { return JSON.parse(sessionStorage.getItem('prisma_user') || sessionStorage.getItem('atlas_user') || 'null') } catch { return null }
 }
 
 export default function App() {
@@ -32,8 +32,8 @@ export default function App() {
 
   useEffect(() => { if (user && !data) loadAll().then(setData).catch(e => setErr(String(e))) }, [user, data])
 
-  const login = u => { try { sessionStorage.setItem('atlas_user', JSON.stringify(u)) } catch {} setUser(u) }
-  const logout = () => { try { sessionStorage.removeItem('atlas_user') } catch {} setUser(null) }
+  const login = u => { try { sessionStorage.setItem('prisma_user', JSON.stringify(u)); sessionStorage.removeItem('atlas_user') } catch {} setUser(u) }
+  const logout = () => { try { sessionStorage.removeItem('prisma_user'); sessionStorage.removeItem('atlas_user') } catch {} setUser(null) }
   const go = (id, kode) => { setFocus(kode || null); setPage(id); window.scrollTo({ top: 0 }) }
 
   if (!user) return <Login onLogin={login} />
@@ -44,7 +44,7 @@ export default function App() {
       <aside className="side">
         <div className="brand">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" />
-          <div><b>ATLAS-Kelas</b><span>IPRT 2025</span></div>
+          <div><b>PRISMA</b><span>Analisis spasial · 2025</span></div>
         </div>
         <nav>
           {NAV.map(n => (

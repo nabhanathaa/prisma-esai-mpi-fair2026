@@ -1,16 +1,17 @@
-# ATLAS-Kelas
+# PRISMA
 
-Dasbor web **Indeks Prioritas Revitalisasi Tangguh (IPRT)** untuk 514 kabupaten/kota di Indonesia, data tahun 2025.
-Purwarupa pendamping esai *ATLAS-Kelas* (Lomba Esai Nasional MPI FAIR 2026).
+**PRISMA — Indeks Prioritas Revitalisasi Sekolah Berbasis Analisis Spasial untuk mewujudkan infrastruktur pendidikan yang adil, tangguh, inklusif, dan berkelanjutan di Indonesia.**
+
+Kepanjangan PRISMA: **Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial**. Aplikasi pendamping esai MPI FAIR 2026 ini memetakan kebutuhan 514 kabupaten/kota dengan menggabungkan kondisi ruang kelas, kerentanan sosial, dan kapasitas fiskal.
 
 ## Fitur
 
 | Halaman | Isi |
 |---|---|
 | Login | Tiga peran: Analis Pusat (Kemendikdasmen/Pusdatin), Dinas/Bappeda, Publik |
-| Ringkasan | KPI nasional, komposisi kondisi ruang kelas per jenjang, median per pulau, 10 besar IPRT, revitalisasi 2025 |
-| Peta Interaktif | Peta 514 kab/kota (Leaflet). Pilih variabel (IPRT, % rusak, P0, RLS, fiskal, IPG, klaster LISA), filter pulau/provinsi, cari kab/kota, panel profil |
-| Prioritas & Simulator | Geser bobot K/S/F dan jumlah sasaran; peringkat dan perbandingan dengan pendekatan volume dihitung ulang langsung; ekspor CSV (bukan untuk akun Publik) |
+| Ringkasan | KPI nasional, komposisi kondisi ruang kelas per jenjang, median per pulau, 10 besar PRISMA, revitalisasi 2025, dan alokasi dua jalur |
+| Peta Interaktif | Peta 514 kab/kota (Leaflet). Pilih variabel (PRISMA, % rusak, P0, RLS, fiskal, IPG, klaster LISA), filter pulau/provinsi, cari kab/kota, panel profil |
+| Prioritas & Simulator | Geser bobot K/S/F dan jumlah sasaran; bandingkan jalur kebutuhan absolut dengan jalur afirmasi PRISMA; ekspor CSV (bukan untuk akun Publik) |
 | Analisis Statistik | Kruskal–Wallis, Moran's I + LISA, OLS → uji LM robust → SEM, uji sensitivitas indeks |
 | Kode Analisis | Seluruh berkas R Markdown, dibagi per tahap, bisa disalin dan diunduh |
 | Metodologi & Data | Rumus, sumber data resmi, alur penerapan, keterbatasan |
@@ -48,16 +49,18 @@ Karena `base: './'` di `vite.config.js`, folder `dist/` juga bisa langsung diung
 
 ## Data
 
-Semua data di `public/data/` dihasilkan oleh `ATLAS_Kelas_Analisis.Rmd` (tahap 9), dari `ATLAS_Kelas_Dataset_2025.xlsx`:
+Semua data di `public/data/` dihasilkan oleh R Markdown analisis (berkas sumber masih memakai nama historis `ATLAS_Kelas_Analisis.Rmd`), dari dataset 2025:
 
 - `app_kabkota.json`: 514 baris, satu per kab/kota (kondisi ruang kelas, P0, RLS, kapasitas fiskal, IPG, K/S/F, IPRT, LISA)
 - `app_ringkasan.json`: hasil statistik (nasional, Kruskal–Wallis, Moran, regresi, IPRT, simulasi, revitalisasi)
 - `kabkota.geojson`: batas 514 kab/kota, disederhanakan dengan mapshaper (18%)
 
+Nama kolom `IPRT` dipertahankan pada berkas data sebagai skema internal dari analisis awal; antarmuka aplikasi menampilkannya sebagai skor PRISMA.
+
 Untuk memperbarui: jalankan ulang Rmd, salin dua file JSON dari `output/` ke `public/data/`, lalu build ulang.
 
 Sumber: Dapodik 2025 (Kemendikdasmen), BPS 2025, PMK 97/2025 (Kemenkeu), Indeks Pemerataan Guru 2025, Pusdatin Revitalisasi 2025.
-Peta dasar: © OpenStreetMap, © CARTO (perlu internet; peta tetap tampil tanpa peta dasar).
+Peta dasar menggunakan tile publik OpenStreetMap, tanpa API key (memerlukan internet; batas wilayah dan data tematik tetap tersedia saat peta dasar dimatikan).
 
 ## Teknologi
 

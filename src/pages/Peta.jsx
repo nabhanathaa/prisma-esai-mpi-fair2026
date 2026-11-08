@@ -65,7 +65,7 @@ export default function Peta({ data, focus }) {
     if (!d) return
     layer.bindTooltip(() => {
       const val = v.cat ? d.lisa : `${fmt(d[vk], v.dec)}${v.unit}`
-      return `<div class="mtip"><b>${d.nama}</b><small>${d.provinsi}</small><div>${v.label}: <b>${val}</b></div><div>Peringkat IPRT: <b>${d.rank_iprt}</b> / 514</div></div>`
+      return `<div class="mtip"><b>${d.nama}</b><small>${d.provinsi}</small><div>${v.label}: <b>${val}</b></div><div>Peringkat PRISMA: <b>${d.rank_iprt}</b> / 514</div></div>`
     }, { sticky: true, direction: 'top', opacity: 1, className: 'mtip-wrap' })
     layer.on({
       mouseover: e => e.target.setStyle({ weight: 2, color: '#fff' }),
@@ -107,13 +107,14 @@ export default function Peta({ data, focus }) {
 
       <div className="mapwrap">
         <MapContainer center={[-2.5, 118]} zoom={5} minZoom={4} maxZoom={11} className="map" zoomSnap={0.25} preferCanvas>
-          {basemap && <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap, &copy; CARTO' />}
+          {basemap && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />}
           <GeoJSON key={gkey} ref={geoRef} data={geo} style={style} onEachFeature={onEach} />
           <FitTo bounds={focusBounds || bounds} panel={!!sel} />
         </MapContainer>
 
         <div className="maplegend">
           <b>{v.label}</b><small>{v.desc}{!v.cat && ' · kelas kuantil'}</small>
+          <small className="map-source">Peta dasar publik · tanpa API key</small>
           {legendItems.map(l => <div key={l.t}><i style={{ background: l.c }} />{l.t}</div>)}
           {(pulau !== 'Semua' || prov !== 'Semua') && <div className="muted">Wilayah di luar filter dipudarkan</div>}
         </div>
@@ -124,7 +125,7 @@ export default function Peta({ data, focus }) {
               <button className="icon close" onClick={() => setSel(null)} aria-label="Tutup"><X size={16} /></button>
               <div className="d-head"><MapPin size={16} /><div><b>{sel.nama}</b><small>{sel.provinsi} · {sel.pulau}</small></div></div>
               <div className="d-score">
-                <div><span>Skor IPRT</span><b>{fmt(sel.IPRT)}</b></div>
+                <div><span>Skor PRISMA</span><b>{fmt(sel.IPRT)}</b></div>
                 <div><span>Peringkat</span><b>{sel.rank_iprt}<small>/514</small></b></div>
                 <div><span>Kelas</span><b className={`badge k-${sel.kelas_iprt.replace(' ', '-').toLowerCase()}`}>{sel.kelas_iprt}</b></div>
               </div>

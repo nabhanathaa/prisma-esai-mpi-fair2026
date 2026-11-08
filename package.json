@@ -1,5 +1,5 @@
 {
-  "name": "atlas-kelas",
+  "name": "prisma-prioritas-sekolah",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -31,5 +31,5 @@
     "mapshaper": "^0.6.99",
     "vite": "^5.4.10"
   },
-  "description": "Dasbor IPRT ATLAS-Kelas 2025"
+  "description": "PRISMA: Indeks Prioritas Revitalisasi Sekolah berbasis analisis spasial"
 }

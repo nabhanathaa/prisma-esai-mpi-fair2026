@@ -66,7 +66,7 @@ export default function Kode() {
   return (
     <div className="page">
       <header className="ph">
-        <div><h1>Kode Analisis</h1><p>Seluruh analisis dalam satu berkas R Markdown. Berkas membaca <code>ATLAS_Kelas_Dataset_2025.xlsx</code> dan menghasilkan tabel, grafik, peta, serta data aplikasi ini.</p></div>
+        <div><h1>Kode Analisis</h1><p>Telusuri metode analisis spasial, pembentukan indeks PRISMA, dan simulasi alokasi. Berkas sumber R Markdown juga dapat diunduh.</p></div>
         <a className="btn primary sm" href={`${import.meta.env.BASE_URL}kode/${FILE}`} download><Download size={15} /> Unduh .Rmd</a>
       </header>
       <div className="code-layout">

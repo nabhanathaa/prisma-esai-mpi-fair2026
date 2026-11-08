@@ -14,7 +14,7 @@ const SUMBER = [
 
 const LANGKAH = [
   ['Data', 'Pusdatin memadukan Dapodik, BPS, dan PMK setiap tahun dalam satu basis data.'],
-  ['Skoring', 'Sistem menghitung IPRT dan menerbitkan daftar prioritas secara otomatis.'],
+  ['Skoring', 'Sistem menghitung skor PRISMA dan menerbitkan daftar prioritas secara otomatis.'],
   ['Verifikasi', 'Dinas memverifikasi 10% sampel sekolah prioritas bersama perguruan tinggi dan mahasiswa KKN.'],
   ['Penetapan', 'Direktorat teknis menetapkan sasaran dan porsi dua jalur dalam petunjuk teknis.'],
   ['Pengawasan', 'Dasbor publik menampilkan progres pembangunan agar masyarakat dan komite sekolah dapat mengawasi.'],
@@ -26,8 +26,8 @@ export default function Metodologi() {
       <header className="ph"><div><h1>Metodologi &amp; Data</h1><p>Rumus indeks, sumber data resmi, alur penerapan, dan keterbatasan.</p></div></header>
 
       <section className="card">
-        <h3><Workflow size={18} /> Rumus IPRT</h3>
-        <div className="formula big">IPRT = 100 × (0,40·K + 0,30·S + 0,30·F)</div>
+        <h3><Workflow size={18} /> Rumus indeks PRISMA</h3>
+        <div className="formula big">PRISMA = 100 × (0,40·K + 0,30·S + 0,30·F)</div>
         <div className="grid3 tight">
           <div className="comp"><i style={{ background: '#E5484D' }} /><b>K · Kerusakan</b><p>Peringkat persentil % ruang kelas rusak sedang + berat (SD–SMK).</p></div>
           <div className="comp"><i style={{ background: '#E08A35' }} /><b>S · Kerentanan sosial</b><p>Rerata peringkat persentil P0 dan kebalikan rata-rata lama sekolah.</p></div>
