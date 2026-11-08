@@ -1,0 +1,425 @@
+---
+title: "ATLAS-Kelas: Analisis Kondisi Ruang Kelas dan Indeks Prioritas Revitalisasi Tangguh (IPRT)"
+subtitle: "Data 2025, 514 kabupaten/kota, jenjang SD, SMP, SMA, SMK"
+author: "Tim ATLAS-Kelas, Politeknik Statistika STIS"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 9, fig.height = 5.5, dpi = 150)
+```
+
+# Pengantar alur
+
+Dokumen ini membaca satu workbook (`data/ATLAS_Kelas_Dataset_2025.xlsx`) dan satu berkas batas wilayah (`data/kabkota_514.geojson`), lalu menghasilkan seluruh angka, tabel, grafik, dan peta yang dipakai dalam naskah esai serta aplikasi web.
+
+| Tahap | Pertanyaan | Metode | Output |
+|---|---|---|---|
+| 1 | Apakah data lengkap dan konsisten? | Pemeriksaan kelengkapan dan total | Tabel QC |
+| 2 | Seberapa besar masalahnya? | Statistik deskriptif | Gambar 1, Tabel 1 |
+| 3 | Di mana masalahnya? | Peta tematik, uji Kruskal-Wallis antarpulau | Gambar 2, 3 |
+| 4 | Apakah kerusakan mengelompok? | Moran's I global dan LISA | Gambar 4 |
+| 5 | Siapa yang menanggung beban? | Regresi OLS, uji LM, regresi spasial | Tabel 2 |
+| 6 | Kab/kota mana didahulukan? | Indeks IPRT dan uji sensitivitas bobot | Gambar 5, Tabel 3 |
+| 7 | Apa bedanya dengan pendekatan volume? | Simulasi cakupan alokasi | Gambar 6 |
+| 8 | (Opsional) Seberapa terpapar iklim? | Lapisan GEE: hujan ekstrem, suhu, air permukaan | Tabel iklim |
+| 9 | Data untuk aplikasi dan naskah | Ekspor JSON dan Excel | `output/app_kabkota.json`, `output/app_ringkasan.json`, `output/hasil_analisis_ATLAS.xlsx` |
+
+```{r paket}
+paket <- c("readxl", "dplyr", "tidyr", "ggplot2", "sf", "spdep", "spatialreg",
+           "scales", "patchwork", "jsonlite", "stringr", "forcats", "knitr")
+baru <- paket[!paket %in% rownames(installed.packages())]
+if (length(baru)) install.packages(baru)
+invisible(lapply(paket, library, character.only = TRUE))
+sf::sf_use_s2(FALSE)
+set.seed(2026)
+
+DATA <- "data/ATLAS_Kelas_Dataset_2025.xlsx"
+GEO  <- "data/kabkota_514.geojson"
+OUT  <- "output"
+dir.create(OUT, showWarnings = FALSE)
+
+# Palet konsisten dengan aplikasi
+PAL <- c(baik = "#2A9D8F", ringan = "#E9C46A", sedang = "#F4A261", berat = "#E76F51")
+PULAU_ORDER <- c("Sumatera", "Jawa", "Bali-Nusa Tenggara", "Kalimantan",
+                 "Sulawesi", "Maluku", "Papua")
+tema <- theme_minimal(base_size = 11, base_family = "sans") +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.caption = element_text(colour = "grey40", size = 8, hjust = 0),
+        panel.grid.minor = element_blank(), legend.position = "bottom")
+theme_set(tema)
+simpan <- function(p, nama, w = 9, h = 5.5) {
+  ggsave(file.path(OUT, paste0(nama, ".png")), p, width = w, height = h, dpi = 300, bg = "white")
+  # versi naskah: tanpa judul/subjudul/sumber (keterangan ditulis di Word)
+  ggsave(file.path(OUT, paste0(nama, "_naskah.png")), p + labs(title = NULL, subtitle = NULL, caption = NULL),
+         width = w, height = h * .9, dpi = 300, bg = "white")
+  p
+}
+fmt <- function(x, d = 1) format(round(x, d), big.mark = ".", decimal.mark = ",", nsmall = d)
+```
+
+# Tahap 1. Membaca data dan pemeriksaan kualitas
+
+```{r baca}
+lembar <- excel_sheets(DATA); lembar
+rk     <- read_excel(DATA, "01_ruang_kelas_long")
+master <- read_excel(DATA, "08_master_kabkota") |> mutate(kode_bps = as.character(kode_bps))
+revit  <- read_excel(DATA, "06_revitalisasi_2025")
+prov   <- read_excel(DATA, "05_BPS_provinsi")
+peta   <- st_read(GEO, quiet = TRUE)
+st_crs(peta) <- 4326   # CRS84 = WGS84 lon/lat; ditetapkan eksplisit agar konsisten lintas versi GDAL
+peta <- peta |> st_make_valid() |> mutate(kode_bps = as.character(kode_bps))
+
+qc <- tibble(
+  pemeriksaan = c("Jumlah kab/kota di master", "Jumlah poligon peta",
+                  "Kab/kota tanpa P0", "Kab/kota tanpa RLS",
+                  "Kab/kota memakai proksi fiskal provinsi",
+                  "Kode kab/kota master yang tidak ada di peta"),
+  hasil = c(nrow(master), nrow(peta), sum(is.na(master$p0_persen)),
+            sum(is.na(master$rls_tahun)), sum(master$fiskal_proksi_provinsi),
+            sum(!master$kode_bps %in% peta$kode_bps)))
+kable(qc, caption = "Pemeriksaan kelengkapan data")
+stopifnot(nrow(master) == 514, all(master$kode_bps %in% peta$kode_bps))
+```
+
+# Tahap 2. Besaran masalah (deskriptif nasional)
+
+```{r deskriptif-nasional}
+nas <- rk |> filter(status == "Negeri dan Swasta") |>
+  group_by(jenjang) |>
+  summarise(across(c(baik, rusak_ringan, rusak_sedang, rusak_berat, jumlah), sum), .groups = "drop") |>
+  mutate(jenjang = factor(jenjang, c("SD", "SMP", "SMA", "SMK"))) |> arrange(jenjang)
+tot <- nas |> summarise(across(-jenjang, sum)) |> mutate(jenjang = "Total")
+tab1 <- bind_rows(nas |> mutate(jenjang = as.character(jenjang)), tot) |>
+  mutate(pct_baik = 100 * baik / jumlah, pct_ringan = 100 * rusak_ringan / jumlah,
+         pct_sedang = 100 * rusak_sedang / jumlah, pct_berat = 100 * rusak_berat / jumlah,
+         pct_sedang_berat = pct_sedang + pct_berat)
+write.csv(tab1, file.path(OUT, "tabel1_kondisi_nasional.csv"), row.names = FALSE)
+kable(tab1 |> select(jenjang, jumlah, rusak_berat, pct_baik, pct_ringan, pct_sedang, pct_berat),
+      digits = 1, format.args = list(big.mark = "."),
+      caption = "Tabel 1. Kondisi ruang kelas menurut jenjang, 2025")
+```
+
+```{r gambar1, fig.height=4.2}
+g1_data <- nas |> pivot_longer(c(baik, rusak_ringan, rusak_sedang, rusak_berat),
+                               names_to = "kondisi", values_to = "n") |>
+  group_by(jenjang) |> mutate(p = n / sum(n)) |> ungroup() |>
+  mutate(kondisi = factor(kondisi, c("rusak_berat", "rusak_sedang", "rusak_ringan", "baik"),
+                          c("Rusak berat", "Rusak sedang", "Rusak ringan", "Baik")))
+g1 <- ggplot(g1_data, aes(x = fct_rev(jenjang), y = p, fill = kondisi)) +
+  geom_col(width = .68, colour = "white", linewidth = .3) +
+  geom_text(aes(label = ifelse(p > .06, percent(p, .1, decimal.mark = ","), "")),
+            position = position_stack(vjust = .5), size = 3.2, colour = "white", fontface = "bold") +
+  coord_flip() + scale_y_continuous(labels = percent, expand = c(0, 0)) +
+  scale_fill_manual(values = c("Baik" = PAL[["baik"]], "Rusak ringan" = PAL[["ringan"]],
+                               "Rusak sedang" = PAL[["sedang"]], "Rusak berat" = PAL[["berat"]]),
+                    breaks = c("Baik", "Rusak ringan", "Rusak sedang", "Rusak berat")) +
+  labs(title = "Gambar 1. Kondisi ruang kelas menurut jenjang, 2025",
+       x = NULL, y = "Proporsi ruang kelas", fill = NULL,
+       caption = "Sumber: Dapodik, Portal Data Kemendikdasmen (2025), diolah.")
+simpan(g1, "gambar1_kondisi_jenjang", 9, 4.2)
+```
+
+```{r revitalisasi}
+revit_ringkas <- revit |> mutate(pct_dari_total = 100 * jumlah_sekolah / 16167) |> head(8)
+kable(revit_ringkas, digits = 1, caption = "Kategori bantuan revitalisasi 2025 (8 terbesar)")
+```
+
+# Tahap 3. Sebaran spasial dan perbedaan antarpulau
+
+```{r gabung-peta}
+d <- peta |> select(kode_bps, geometry) |> left_join(master, by = "kode_bps") |>
+  mutate(pulau = factor(pulau, PULAU_ORDER),
+         log_fiskal = log(rasio_kapasitas_fiskal + 0.01))
+desk <- d |> st_drop_geometry() |>
+  summarise(across(c(pct_rusak_berat, pct_rusak_sedang_berat, p0_persen, rls_tahun,
+                     rasio_kapasitas_fiskal, ipg_sd),
+                   list(mean = mean, sd = sd, min = min, median = median, max = max), na.rm = TRUE)) |>
+  pivot_longer(everything(), names_to = c("variabel", ".value"), names_pattern = "(.*)_(mean|sd|min|median|max)$")
+write.csv(desk, file.path(OUT, "tabel_deskriptif_kabkota.csv"), row.names = FALSE)
+kable(desk, digits = 2, caption = "Statistik deskriptif 514 kab/kota")
+```
+
+```{r gambar2, fig.height=5}
+g2 <- ggplot(d) +
+  geom_sf(aes(fill = pct_rusak_sedang_berat), colour = "white", linewidth = .05) +
+  scale_fill_gradientn(colours = c("#F1FAEE", "#FFD6A5", "#F4A261", "#E76F51", "#9D0208"),
+                       name = "% ruang kelas rusak sedang + berat", limits = c(0, NA)) +
+  labs(title = "Gambar 2. Persentase ruang kelas rusak sedang dan berat per kab/kota, 2025",
+       caption = "Sumber: Dapodik, Portal Data Kemendikdasmen (2025), diolah. Jenjang SD, SMP, SMA, SMK.") +
+  coord_sf(datum = NA) + theme_void(base_size = 10) +
+  theme(legend.position = "bottom", legend.key.width = unit(2.2, "cm"),
+        plot.title = element_text(face = "bold"), plot.caption = element_text(colour = "grey40", hjust = 0))
+simpan(g2, "gambar2_peta_rusak", 11, 5)
+```
+
+```{r kruskal}
+kw <- kruskal.test(pct_rusak_sedang_berat ~ pulau, data = st_drop_geometry(d))
+eps2 <- unname(kw$statistic) / ((nrow(d)^2 - 1) / (nrow(d) + 1))   # epsilon-squared
+aov_prov <- summary(aov(pct_rusak_sedang_berat ~ provinsi, data = st_drop_geometry(d)))[[1]]
+eta2_prov <- aov_prov$`Sum Sq`[1] / sum(aov_prov$`Sum Sq`)
+pw <- pairwise.wilcox.test(d$pct_rusak_sedang_berat, d$pulau, p.adjust.method = "BH")
+med_pulau <- st_drop_geometry(d) |> group_by(pulau) |>
+  summarise(n = n(), median = median(pct_rusak_sedang_berat),
+            q1 = quantile(pct_rusak_sedang_berat, .25), q3 = quantile(pct_rusak_sedang_berat, .75))
+kable(med_pulau, digits = 1, caption = "Median % rusak sedang + berat menurut pulau")
+kw; cat("epsilon^2 =", round(eps2, 3), "| proporsi varians antarprovinsi (eta^2) =", round(eta2_prov, 3), "\n")
+```
+
+```{r gambar3, fig.height=4.6}
+g3 <- ggplot(st_drop_geometry(d), aes(x = fct_rev(pulau), y = pct_rusak_sedang_berat, fill = pulau)) +
+  geom_boxplot(width = .55, outlier.alpha = .4, alpha = .9, colour = "grey25") +
+  coord_flip() + scale_fill_manual(values = c("#264653", "#2A9D8F", "#8AB17D", "#E9C46A",
+                                               "#F4A261", "#E76F51", "#9D0208"), guide = "none") +
+  labs(title = "Gambar 3. Sebaran % ruang kelas rusak sedang + berat menurut pulau",
+       subtitle = sprintf("Kruskal-Wallis H = %s; df = %d; p %s",
+                          fmt(kw$statistic, 2), kw$parameter,
+                          ifelse(kw$p.value < .001, "< 0,001", paste("=", fmt(kw$p.value, 3)))),
+       x = NULL, y = "% ruang kelas rusak sedang + berat",
+       caption = "Sumber: Dapodik (2025), diolah.")
+simpan(g3, "gambar3_boxplot_pulau", 9, 4.6)
+```
+
+# Tahap 4. Autokorelasi spasial (Moran's I dan LISA)
+
+Matriks bobot memakai 5 tetangga terdekat (k-nearest neighbours) dari titik pusat poligon, distandardisasi baris. Pilihan ini menghindari kab/kota kepulauan yang tidak memiliki tetangga bersinggungan.
+
+```{r bobot}
+titik <- st_point_on_surface(d)
+koord <- st_coordinates(titik)
+nb  <- knn2nb(knearneigh(koord, k = 5, longlat = TRUE))
+lw  <- nb2listw(nb, style = "W")
+mi  <- moran.test(d$pct_rusak_sedang_berat, lw, randomisation = TRUE)
+mi_mc <- moran.mc(d$pct_rusak_sedang_berat, lw, nsim = 999)
+mi; mi_mc
+```
+
+```{r lisa}
+z  <- as.numeric(scale(d$pct_rusak_sedang_berat))
+lz <- lag.listw(lw, z)
+li <- localmoran(d$pct_rusak_sedang_berat, lw)
+p_li <- li[, "Pr(z != E(Ii))"]
+d$lisa <- case_when(p_li >= .05 ~ "Tidak signifikan",
+                    z > 0 & lz > 0 ~ "Tinggi-Tinggi",
+                    z < 0 & lz < 0 ~ "Rendah-Rendah",
+                    z > 0 & lz < 0 ~ "Tinggi-Rendah",
+                    TRUE ~ "Rendah-Tinggi")
+lisa_tab <- st_drop_geometry(d) |> count(lisa)
+hh_pulau <- st_drop_geometry(d) |> filter(lisa == "Tinggi-Tinggi") |> count(pulau, name = "kabkota_HH")
+kable(lisa_tab, caption = "Jumlah kab/kota per klaster LISA (alpha 5%)")
+kable(hh_pulau, caption = "Klaster Tinggi-Tinggi menurut pulau")
+```
+
+```{r gambar4, fig.height=5}
+g4 <- ggplot(d) + geom_sf(aes(fill = lisa), colour = "white", linewidth = .05) +
+  scale_fill_manual(values = c("Tinggi-Tinggi" = "#C1121F", "Rendah-Rendah" = "#1D3557",
+                               "Tinggi-Rendah" = "#F4A261", "Rendah-Tinggi" = "#A8DADC",
+                               "Tidak signifikan" = "#E9ECEF"), name = NULL) +
+  labs(title = "Gambar 4. Klaster LISA persentase ruang kelas rusak sedang + berat",
+       subtitle = sprintf("Moran's I global = %s (p %s), bobot 5 tetangga terdekat",
+                          fmt(mi$estimate[1], 3), ifelse(mi$p.value < .001, "< 0,001", fmt(mi$p.value, 3))),
+       caption = "Sumber: Dapodik (2025), diolah.") +
+  coord_sf(datum = NA) + theme_void(base_size = 10) + theme(legend.position = "bottom", plot.title = element_text(face = "bold"),
+                                     plot.caption = element_text(colour = "grey40", hjust = 0))
+simpan(g4, "gambar4_lisa", 11, 5)
+```
+
+# Tahap 5. Regresi: faktor yang berasosiasi dengan kerusakan
+
+Variabel respons: persentase ruang kelas rusak sedang + berat. Prediktor: kemiskinan (P0), rata-rata lama sekolah, log rasio kapasitas fiskal, Indeks Pemerataan Guru SD, dan status kota.
+
+```{r ols}
+dm <- st_drop_geometry(d) |>
+  mutate(kota = as.integer(jenis == "Kota"))
+f <- pct_rusak_sedang_berat ~ p0_persen + rls_tahun + log_fiskal + ipg_sd + kota
+ols <- lm(f, data = dm)
+summary(ols)
+vif <- sapply(c("p0_persen", "rls_tahun", "log_fiskal", "ipg_sd", "kota"), function(v) {
+  r2 <- summary(lm(reformulate(setdiff(c("p0_persen", "rls_tahun", "log_fiskal", "ipg_sd", "kota"), v), v), dm))$r.squared
+  1 / (1 - r2) })
+bp <- lmtest_bp <- {
+  e2 <- residuals(ols)^2; aux <- lm(update(f, e2 ~ .), data = cbind(dm, e2 = e2))
+  stat <- nrow(dm) * summary(aux)$r.squared
+  c(statistic = stat, p.value = pchisq(stat, df = 5, lower.tail = FALSE)) }
+moran_res <- lm.morantest(ols, lw)
+lm_tests <- lm.RStests(ols, lw, test = "all")
+names(lm_tests)
+round(vif, 2); bp; moran_res; lm_tests
+```
+
+```{r spasial}
+nm <- names(lm_tests)
+p_rlmlag <- lm_tests[[grep("^(adjRSlag|RLMlag)$", nm)]]$p.value
+p_rlmerr <- lm_tests[[grep("^(adjRSerr|RLMerr)$", nm)]]$p.value
+pilih <- if (p_rlmlag < .05 && p_rlmerr >= .05) "SAR" else if (p_rlmerr < .05 && p_rlmlag >= .05) "SEM" else
+  if (p_rlmlag < p_rlmerr) "SAR" else "SEM"
+sar <- lagsarlm(f, data = dm, listw = lw)
+sem <- errorsarlm(f, data = dm, listw = lw)
+aic <- c(OLS = AIC(ols), SAR = AIC(sar), SEM = AIC(sem))
+cat("Model terpilih berdasarkan uji LM robust:", pilih, "\n"); round(aic, 1)
+mod <- if (pilih == "SAR") sar else sem
+summary(mod)
+```
+
+```{r tabel2}
+koef_tab <- function(m, nama) {
+  s <- if (inherits(m, "lm")) summary(m)$coefficients else summary(m)$Coef
+  tibble(model = nama, term = rownames(s), estimate = s[, 1], se = s[, 2], p = s[, 4])
+}
+tab2 <- bind_rows(koef_tab(ols, "OLS"), koef_tab(mod, pilih))
+rho_lambda <- if (pilih == "SAR") list(param = "rho", nilai = unname(mod$rho)) else list(param = "lambda", nilai = unname(mod$lambda))
+write.csv(tab2, file.path(OUT, "tabel2_regresi.csv"), row.names = FALSE)
+kable(tab2, digits = 3, caption = "Tabel 2. Koefisien regresi OLS dan model spasial terpilih")
+rho_lambda
+```
+
+# Tahap 6. Indeks Prioritas Revitalisasi Tangguh (IPRT)
+
+IPRT = 100 x (0,40 K + 0,30 S + 0,30 F), dengan setiap komponen berupa peringkat persentil (0-1):
+
+* **K (kondisi)**: % ruang kelas rusak sedang + berat (makin tinggi makin prioritas).
+* **S (kerentanan sosial)**: rata-rata persentil P0 dan persentil kebalikan RLS.
+* **F (keterbatasan fiskal)**: persentil kebalikan rasio kapasitas fiskal.
+
+```{r iprt}
+pr <- function(x) (rank(x, na.last = "keep", ties.method = "average") - 1) / (sum(!is.na(x)) - 1)
+d <- d |> mutate(K = pr(pct_rusak_sedang_berat),
+                 S = (pr(p0_persen) + pr(-rls_tahun)) / 2,
+                 F = pr(-rasio_kapasitas_fiskal),
+                 IPRT = 100 * (.40 * K + .30 * S + .30 * F),
+                 rank_iprt = rank(-IPRT, ties.method = "first"),
+                 kelas_iprt = cut(IPRT, quantile(IPRT, c(0, .2, .4, .6, .8, 1)),
+                                  labels = c("Sangat rendah", "Rendah", "Sedang", "Tinggi", "Sangat tinggi"),
+                                  include.lowest = TRUE))
+top20 <- st_drop_geometry(d) |> arrange(rank_iprt) |>
+  select(rank_iprt, nama, provinsi, IPRT, pct_rusak_sedang_berat, p0_persen, rls_tahun,
+         rasio_kapasitas_fiskal) |> head(20)
+write.csv(top20, file.path(OUT, "tabel3_top20_iprt.csv"), row.names = FALSE)
+kable(top20, digits = 2, caption = "Tabel 3. Dua puluh kab/kota dengan IPRT tertinggi")
+prior_pulau <- st_drop_geometry(d) |> filter(kelas_iprt == "Sangat tinggi") |> count(pulau, name = "n_prioritas")
+kable(prior_pulau, caption = "Sebaran kab/kota kelas IPRT 'Sangat tinggi' menurut pulau")
+```
+
+```{r sensitivitas}
+# 1.000 kombinasi bobot acak (Dirichlet di sekitar 0,4/0,3/0,3) -> stabilitas kuintil teratas
+rdir <- function(a) { x <- rgamma(length(a), a); x / sum(x) }
+top_q <- d$IPRT >= quantile(d$IPRT, .8)
+stab <- replicate(1000, {
+  w <- rdir(c(8, 6, 6)); s <- 100 * (w[1] * d$K + w[2] * d$S + w[3] * d$F)
+  c(tau = cor(s, d$IPRT, method = "kendall"), tetap = mean((s >= quantile(s, .8))[top_q]))
+})
+sens <- c(kendall_tau_median = median(stab["tau", ]), kendall_tau_p05 = unname(quantile(stab["tau", ], .05)),
+          tetap_kuintil_atas_median = median(stab["tetap", ]))
+round(sens, 3)
+```
+
+```{r gambar5, fig.height=5}
+g5 <- ggplot(d) + geom_sf(aes(fill = IPRT), colour = "white", linewidth = .05) +
+  scale_fill_gradientn(colours = c("#EAF4F4", "#A8DADC", "#457B9D", "#F4A261", "#C1121F"), name = "Skor IPRT") +
+  labs(title = "Gambar 5. Indeks Prioritas Revitalisasi Tangguh (IPRT) per kab/kota",
+       subtitle = "Bobot: kondisi 40%, kerentanan sosial 30%, keterbatasan fiskal 30%",
+       caption = "Sumber: Dapodik (2025), BPS (2025), PMK 97/2025; diolah.") +
+  coord_sf(datum = NA) + theme_void(base_size = 10) + theme(legend.position = "bottom", legend.key.width = unit(2.2, "cm"),
+                                     plot.title = element_text(face = "bold"),
+                                     plot.caption = element_text(colour = "grey40", hjust = 0))
+simpan(g5, "gambar5_peta_iprt", 11, 5)
+```
+
+# Tahap 7. Simulasi cakupan: IPRT dibandingkan pendekatan volume
+
+Pendekatan volume mengurutkan kab/kota berdasarkan jumlah absolut ruang kelas rusak berat. Pendekatan IPRT mengurutkan berdasarkan skor IPRT. Untuk 20% kab/kota teratas (103 wilayah) dibandingkan cakupan masing-masing.
+
+```{r simulasi}
+dd <- st_drop_geometry(d)
+n_top <- round(.2 * nrow(dd))
+ambil <- function(urut) dd[order(urut, decreasing = TRUE)[1:n_top], ]
+vol <- ambil(dd$rusak_berat_total); ipr <- ambil(dd$IPRT)
+ringkas <- function(x, nama) tibble(
+  pendekatan = nama,
+  pangsa_ruang_rusak_berat = 100 * sum(x$rusak_berat_total) / sum(dd$rusak_berat_total),
+  median_pct_rusak_sb = median(x$pct_rusak_sedang_berat),
+  pangsa_fiskal_sangat_rendah_rendah = 100 * mean(x$kategori_kapasitas_fiskal %in% c("Sangat Rendah", "Rendah", "Rendah (proksi provinsi)")),
+  median_p0 = median(x$p0_persen),
+  pangsa_jawa = 100 * mean(x$pulau == "Jawa"),
+  pangsa_papua_maluku_nusa = 100 * mean(x$pulau %in% c("Papua", "Maluku", "Bali-Nusa Tenggara")))
+sim <- bind_rows(ringkas(vol, "Volume (jumlah rusak berat)"), ringkas(ipr, "IPRT"))
+write.csv(sim, file.path(OUT, "tabel4_simulasi.csv"), row.names = FALSE)
+kable(sim, digits = 1, caption = "Tabel 4. Profil 20% kab/kota teratas menurut dua pendekatan")
+irisan <- length(intersect(vol$kode_bps, ipr$kode_bps)); irisan
+```
+
+```{r gambar6, fig.height=4.4}
+sim_long <- sim |> select(pendekatan, `Median % rusak sedang+berat` = median_pct_rusak_sb,
+                          `% fiskal rendah/sangat rendah` = pangsa_fiskal_sangat_rendah_rendah,
+                          `Median P0 (%)` = median_p0, `% wilayah di Jawa` = pangsa_jawa) |>
+  pivot_longer(-pendekatan)
+g6 <- ggplot(sim_long, aes(x = name, y = value, fill = pendekatan)) +
+  geom_col(position = position_dodge(.75), width = .7) +
+  geom_text(aes(label = fmt(value, 1)), position = position_dodge(.75), vjust = -.4, size = 3.2) +
+  scale_fill_manual(values = c("IPRT" = "#C1121F", "Volume (jumlah rusak berat)" = "#457B9D"), name = NULL) +
+  scale_y_continuous(expand = expansion(c(0, .12))) +
+  labs(title = "Gambar 6. Profil 20% kab/kota teratas: IPRT dibandingkan pendekatan volume",
+       x = NULL, y = NULL, caption = "Sumber: hasil olahan penulis.")
+simpan(g6, "gambar6_simulasi", 9.5, 4.4)
+```
+
+# Tahap 8 (opsional). Lapisan paparan iklim dari Google Earth Engine
+
+Jika sheet `09_iklim_gee` sudah ditambahkan (keluaran skrip `gee_iklim_kabkota.js`, kolom `kode_bps`, `hari_hujan_ekstrem`, `hari_panas_ekstrem`, `pct_genangan`), chunk berikut menghitung IPRT versi iklim. Bila sheet belum ada, chunk dilewati.
+
+```{r iklim, eval = "09_iklim_gee" %in% excel_sheets(DATA)}
+ik <- read_excel(DATA, "09_iklim_gee") |> mutate(kode_bps = as.character(kode_bps))
+d <- d |> left_join(ik, by = "kode_bps") |>
+  mutate(E = (pr(hari_hujan_ekstrem) + pr(hari_panas_ekstrem) + pr(pct_genangan)) / 3,
+         IPRT_iklim = 100 * (.35 * K + .25 * E + .20 * S + .20 * F))
+cor(d$IPRT, d$IPRT_iklim, method = "spearman")
+```
+
+# Tahap 9. Ekspor data untuk aplikasi dan naskah
+
+```{r ekspor}
+kolom_app <- c("kode_bps", "nama", "provinsi", "pulau", "jenis", "jumlah_total", "baik_total",
+               "rusak_ringan_total", "rusak_sedang_total", "rusak_berat_total",
+               "pct_rusak_berat", "pct_rusak_sedang_berat", "pct_baik",
+               "pct_rb_sd", "pct_rb_smp", "pct_rb_sma", "pct_rb_smk",
+               "jumlah_sd", "jumlah_smp", "jumlah_sma", "jumlah_smk",
+               "p0_persen", "rls_tahun", "rasio_kapasitas_fiskal", "kategori_kapasitas_fiskal",
+               "fiskal_proksi_provinsi", "ipg_sd", "ipg_smp", "ipg_sma", "ipg_smk",
+               "K", "S", "F", "IPRT", "rank_iprt", "kelas_iprt", "lisa")
+app <- st_drop_geometry(d)[, kolom_app]
+ringkasan <- list(
+  dibuat = as.character(Sys.time()),
+  nasional = tab1,
+  kruskal = list(H = unname(kw$statistic), df = unname(kw$parameter), p = kw$p.value, epsilon2 = eps2,
+                 eta2_provinsi = eta2_prov, median_pulau = med_pulau),
+  moran = list(I = unname(mi$estimate[1]), p = mi$p.value, p_mc = mi_mc$p.value, lisa = lisa_tab),
+  regresi = list(terpilih = pilih, aic = as.list(aic), koef = tab2, param = rho_lambda,
+                 r2_ols = summary(ols)$r.squared, vif = as.list(vif), bp = as.list(bp),
+                 moran_resid_I = unname(moran_res$estimate[1]), moran_resid_p = moran_res$p.value,
+                 lm = lapply(lm_tests, function(t) list(stat = unname(t$statistic), p = t$p.value))),
+  iprt = list(top20 = top20, sensitivitas = as.list(sens), prioritas_pulau = prior_pulau),
+  simulasi = list(tabel = sim, irisan = irisan, n_top = n_top),
+  revitalisasi = revit
+)
+write_json(app, file.path(OUT, "app_kabkota.json"), digits = 6, na = "null", auto_unbox = TRUE)
+write_json(ringkasan, file.path(OUT, "app_ringkasan.json"), digits = 6, na = "null", auto_unbox = TRUE, pretty = TRUE)
+writexl_ok <- requireNamespace("writexl", quietly = TRUE)
+if (writexl_ok) writexl::write_xlsx(list(hasil_kabkota = app, top20 = top20, simulasi = sim, regresi = tab2),
+                                    file.path(OUT, "hasil_analisis_ATLAS.xlsx"))
+list.files(OUT)
+```
+
+# Informasi sesi
+
+```{r sesi}
+sessionInfo()
+```

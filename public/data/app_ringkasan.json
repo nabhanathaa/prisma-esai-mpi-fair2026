@@ -1,0 +1,794 @@
+{
+  "dibuat": "2026-11-08 11:18:26.915668",
+  "nasional": [
+    {
+      "jenjang": "SD",
+      "baik": 463951,
+      "rusak_ringan": 317697,
+      "rusak_sedang": 274414,
+      "rusak_berat": 141699,
+      "jumlah": 1197761,
+      "pct_baik": 38.734856,
+      "pct_ringan": 26.52424,
+      "pct_sedang": 22.910581,
+      "pct_berat": 11.830323,
+      "pct_sedang_berat": 34.740904
+    },
+    {
+      "jenjang": "SMP",
+      "baik": 210723,
+      "rusak_ringan": 105844,
+      "rusak_sedang": 80310,
+      "rusak_berat": 35249,
+      "jumlah": 432126,
+      "pct_baik": 48.764249,
+      "pct_ringan": 24.493782,
+      "pct_sedang": 18.584857,
+      "pct_berat": 8.157112,
+      "pct_sedang_berat": 26.741969
+    },
+    {
+      "jenjang": "SMA",
+      "baik": 116029,
+      "rusak_ringan": 40782,
+      "rusak_sedang": 27441,
+      "rusak_berat": 14261,
+      "jumlah": 198513,
+      "pct_baik": 58.449069,
+      "pct_ringan": 20.543743,
+      "pct_sedang": 13.823276,
+      "pct_berat": 7.183912,
+      "pct_sedang_berat": 21.007188
+    },
+    {
+      "jenjang": "SMK",
+      "baik": 120773,
+      "rusak_ringan": 48766,
+      "rusak_sedang": 20756,
+      "rusak_berat": 10156,
+      "jumlah": 200451,
+      "pct_baik": 60.250635,
+      "pct_ringan": 24.32814,
+      "pct_sedang": 10.35465,
+      "pct_berat": 5.066575,
+      "pct_sedang_berat": 15.421225
+    },
+    {
+      "jenjang": "Total",
+      "baik": 911476,
+      "rusak_ringan": 513089,
+      "rusak_sedang": 402921,
+      "rusak_berat": 201365,
+      "jumlah": 2028851,
+      "pct_baik": 44.925724,
+      "pct_ringan": 25.289634,
+      "pct_sedang": 19.859566,
+      "pct_berat": 9.925076,
+      "pct_sedang_berat": 29.784642
+    }
+  ],
+  "kruskal": {
+    "H": 90.222322,
+    "df": 6,
+    "p": 2.72432e-17,
+    "epsilon2": 0.175872,
+    "eta2_provinsi": 0.349846,
+    "median_pulau": [
+      {
+        "pulau": "Sumatera",
+        "n": 154,
+        "median": 33.738822,
+        "q1": 26.931999,
+        "q3": 38.972651
+      },
+      {
+        "pulau": "Jawa",
+        "n": 119,
+        "median": 27.900597,
+        "q1": 16.707284,
+        "q3": 34.358932
+      },
+      {
+        "pulau": "Bali-Nusa Tenggara",
+        "n": 41,
+        "median": 33.890993,
+        "q1": 26.080167,
+        "q3": 40.41514
+      },
+      {
+        "pulau": "Kalimantan",
+        "n": 56,
+        "median": 30.62898,
+        "q1": 23.642078,
+        "q3": 35.130995
+      },
+      {
+        "pulau": "Sulawesi",
+        "n": 81,
+        "median": 37.704011,
+        "q1": 31.784769,
+        "q3": 43.940643
+      },
+      {
+        "pulau": "Maluku",
+        "n": 21,
+        "median": 43.488844,
+        "q1": 41.505131,
+        "q3": 52.067669
+      },
+      {
+        "pulau": "Papua",
+        "n": 42,
+        "median": 36.382928,
+        "q1": 26.250305,
+        "q3": 48.480051
+      }
+    ]
+  },
+  "moran": {
+    "I": 0.403403,
+    "p": 6.588447e-55,
+    "p_mc": 0.001,
+    "lisa": [
+      {
+        "lisa": "Rendah-Rendah",
+        "n": 49
+      },
+      {
+        "lisa": "Rendah-Tinggi",
+        "n": 11
+      },
+      {
+        "lisa": "Tidak signifikan",
+        "n": 416
+      },
+      {
+        "lisa": "Tinggi-Rendah",
+        "n": 7
+      },
+      {
+        "lisa": "Tinggi-Tinggi",
+        "n": 31
+      }
+    ]
+  },
+  "regresi": {
+    "terpilih": "SEM",
+    "aic": {
+      "OLS": 3723.854179,
+      "SAR": 3612.755784,
+      "SEM": 3608.022623
+    },
+    "koef": [
+      {
+        "model": "OLS",
+        "term": "(Intercept)",
+        "estimate": 29.498676,
+        "se": 4.356043,
+        "p": 3.522693e-11
+      },
+      {
+        "model": "OLS",
+        "term": "p0_persen",
+        "estimate": 0.43172,
+        "se": 0.069348,
+        "p": 1.006727e-09
+      },
+      {
+        "model": "OLS",
+        "term": "rls_tahun",
+        "estimate": -0.670787,
+        "se": 0.366271,
+        "p": 0.067627
+      },
+      {
+        "model": "OLS",
+        "term": "log_fiskal",
+        "estimate": -2.227925,
+        "se": 0.42471,
+        "p": 2.288998e-07
+      },
+      {
+        "model": "OLS",
+        "term": "ipg_sd",
+        "estimate": 0.553862,
+        "se": 2.594815,
+        "p": 0.831062
+      },
+      {
+        "model": "OLS",
+        "term": "kota",
+        "estimate": -8.613098,
+        "se": 1.382787,
+        "p": 9.866336e-10
+      },
+      {
+        "model": "SEM",
+        "term": "(Intercept)",
+        "estimate": 37.656487,
+        "se": 4.51231,
+        "p": 0
+      },
+      {
+        "model": "SEM",
+        "term": "p0_persen",
+        "estimate": 0.364382,
+        "se": 0.090451,
+        "p": 0.000056
+      },
+      {
+        "model": "SEM",
+        "term": "rls_tahun",
+        "estimate": -1.423377,
+        "se": 0.381284,
+        "p": 0.000189
+      },
+      {
+        "model": "SEM",
+        "term": "log_fiskal",
+        "estimate": -1.589308,
+        "se": 0.399444,
+        "p": 0.000069
+      },
+      {
+        "model": "SEM",
+        "term": "ipg_sd",
+        "estimate": 1.79481,
+        "se": 2.170942,
+        "p": 0.408383
+      },
+      {
+        "model": "SEM",
+        "term": "kota",
+        "estimate": -5.794017,
+        "se": 1.223953,
+        "p": 2.202928e-06
+      }
+    ],
+    "param": {
+      "param": "lambda",
+      "nilai": 0.56167
+    },
+    "r2_ols": 0.361751,
+    "vif": {
+      "p0_persen": 1.466199,
+      "rls_tahun": 2.17731,
+      "log_fiskal": 1.182458,
+      "ipg_sd": 1.033579,
+      "kota": 1.877895
+    },
+    "bp": {
+      "statistic": 18.403081,
+      "p.value": 0.002481
+    },
+    "moran_resid_I": 0.342522,
+    "moran_resid_p": [
+      [1.315445e-41]
+    ],
+    "lm": {
+      "RSerr": {
+        "stat": 170.8321,
+        "p": 0
+      },
+      "RSlag": {
+        "stat": 168.699303,
+        "p": 0
+      },
+      "adjRSerr": {
+        "stat": 16.908866,
+        "p": 0.000039
+      },
+      "adjRSlag": {
+        "stat": 14.776069,
+        "p": 0.000121
+      },
+      "SARMA": {
+        "stat": 185.608169,
+        "p": 0
+      }
+    }
+  },
+  "iprt": {
+    "top20": [
+      {
+        "rank_iprt": 1,
+        "nama": "Kabupaten Banggai Laut",
+        "provinsi": "Sulawesi Tengah",
+        "IPRT": 87.592593,
+        "pct_rusak_sedang_berat": 52.111324,
+        "p0_persen": 12.71,
+        "rls_tahun": 8.66,
+        "rasio_kapasitas_fiskal": 0.001
+      },
+      {
+        "rank_iprt": 2,
+        "nama": "Kabupaten Lembata",
+        "provinsi": "Nusa Tenggara Timur",
+        "IPRT": 86.535088,
+        "pct_rusak_sedang_berat": 46.356275,
+        "p0_persen": 23.27,
+        "rls_tahun": 8.49,
+        "rasio_kapasitas_fiskal": 0.006
+      },
+      {
+        "rank_iprt": 3,
+        "nama": "Kabupaten Pesisir Barat",
+        "provinsi": "Lampung",
+        "IPRT": 84.975634,
+        "pct_rusak_sedang_berat": 52.867045,
+        "p0_persen": 12.13,
+        "rls_tahun": 8.76,
+        "rasio_kapasitas_fiskal": 0.005
+      },
+      {
+        "rank_iprt": 4,
+        "nama": "Kabupaten Bangkalan",
+        "provinsi": "Jawa Timur",
+        "IPRT": 84.975634,
+        "pct_rusak_sedang_berat": 41.419563,
+        "p0_persen": 18.25,
+        "rls_tahun": 6.15,
+        "rasio_kapasitas_fiskal": 0.011
+      },
+      {
+        "rank_iprt": 5,
+        "nama": "Kabupaten Maluku Tenggara",
+        "provinsi": "Maluku",
+        "IPRT": 84.298246,
+        "pct_rusak_sedang_berat": 52.067669,
+        "p0_persen": 21.16,
+        "rls_tahun": 9.85,
+        "rasio_kapasitas_fiskal": 0.004
+      },
+      {
+        "rank_iprt": 6,
+        "nama": "Kabupaten Gorontalo Utara",
+        "provinsi": "Gorontalo",
+        "IPRT": 84.137427,
+        "pct_rusak_sedang_berat": 38.716502,
+        "p0_persen": 15.89,
+        "rls_tahun": 7.56,
+        "rasio_kapasitas_fiskal": 0.002
+      },
+      {
+        "rank_iprt": 7,
+        "nama": "Kabupaten Banggai Kepulauan",
+        "provinsi": "Sulawesi Tengah",
+        "IPRT": 83.78655,
+        "pct_rusak_sedang_berat": 47.05546,
+        "p0_persen": 11.49,
+        "rls_tahun": 8.88,
+        "rasio_kapasitas_fiskal": 0.001
+      },
+      {
+        "rank_iprt": 8,
+        "nama": "Kabupaten Mamasa",
+        "provinsi": "Sulawesi Barat",
+        "IPRT": 83.464912,
+        "pct_rusak_sedang_berat": 60.089854,
+        "p0_persen": 13.66,
+        "rls_tahun": 8.41,
+        "rasio_kapasitas_fiskal": 0.024
+      },
+      {
+        "rank_iprt": 9,
+        "nama": "Kabupaten Nias",
+        "provinsi": "Sumatera Utara",
+        "IPRT": 82.982456,
+        "pct_rusak_sedang_berat": 54.75891,
+        "p0_persen": 14.51,
+        "rls_tahun": 6.41,
+        "rasio_kapasitas_fiskal": 0.049
+      },
+      {
+        "rank_iprt": 10,
+        "nama": "Kabupaten Kepulauan Meranti",
+        "provinsi": "Riau",
+        "IPRT": 82.724172,
+        "pct_rusak_sedang_berat": 39.50555,
+        "p0_persen": 20.51,
+        "rls_tahun": 8.13,
+        "rasio_kapasitas_fiskal": 0.003
+      },
+      {
+        "rank_iprt": 11,
+        "nama": "Kabupaten Mesuji",
+        "provinsi": "Lampung",
+        "IPRT": 82.699805,
+        "pct_rusak_sedang_berat": 51.929093,
+        "p0_persen": 5.92,
+        "rls_tahun": 7.3,
+        "rasio_kapasitas_fiskal": 0.007
+      },
+      {
+        "rank_iprt": 12,
+        "nama": "Kabupaten Sampang",
+        "provinsi": "Jawa Timur",
+        "IPRT": 82.592593,
+        "pct_rusak_sedang_berat": 37.925493,
+        "p0_persen": 20.61,
+        "rls_tahun": 5.19,
+        "rasio_kapasitas_fiskal": 0.008
+      },
+      {
+        "rank_iprt": 13,
+        "nama": "Kabupaten Mahakam Ulu",
+        "provinsi": "Kalimantan Timur",
+        "IPRT": 82.54386,
+        "pct_rusak_sedang_berat": 47.544643,
+        "p0_persen": 10.09,
+        "rls_tahun": 8.71,
+        "rasio_kapasitas_fiskal": 0.003
+      },
+      {
+        "rank_iprt": 14,
+        "nama": "Kabupaten Blora",
+        "provinsi": "Jawa Tengah",
+        "IPRT": 82.329435,
+        "pct_rusak_sedang_berat": 40.175333,
+        "p0_persen": 10.58,
+        "rls_tahun": 7.45,
+        "rasio_kapasitas_fiskal": 0.003
+      },
+      {
+        "rank_iprt": 15,
+        "nama": "Kabupaten Muna Barat",
+        "provinsi": "Sulawesi Tenggara",
+        "IPRT": 81.993177,
+        "pct_rusak_sedang_berat": 51.818917,
+        "p0_persen": 12.83,
+        "rls_tahun": 8.31,
+        "rasio_kapasitas_fiskal": 0.021
+      },
+      {
+        "rank_iprt": 16,
+        "nama": "Kabupaten Muna",
+        "provinsi": "Sulawesi Tenggara",
+        "IPRT": 81.510721,
+        "pct_rusak_sedang_berat": 43.456871,
+        "p0_persen": 12.4,
+        "rls_tahun": 8.86,
+        "rasio_kapasitas_fiskal": 0.002
+      },
+      {
+        "rank_iprt": 17,
+        "nama": "Kabupaten Sumba Tengah",
+        "provinsi": "Nusa Tenggara Timur",
+        "IPRT": 81.111111,
+        "pct_rusak_sedang_berat": 51.324754,
+        "p0_persen": 29.23,
+        "rls_tahun": 7.5,
+        "rasio_kapasitas_fiskal": 0.06
+      },
+      {
+        "rank_iprt": 18,
+        "nama": "Kabupaten Nias Barat",
+        "provinsi": "Sumatera Utara",
+        "IPRT": 81.042885,
+        "pct_rusak_sedang_berat": 49.641577,
+        "p0_persen": 22.47,
+        "rls_tahun": 7.43,
+        "rasio_kapasitas_fiskal": 0.052
+      },
+      {
+        "rank_iprt": 19,
+        "nama": "Kabupaten Buru",
+        "provinsi": "Maluku",
+        "IPRT": 80.960039,
+        "pct_rusak_sedang_berat": 54.344217,
+        "p0_persen": 15.11,
+        "rls_tahun": 9.28,
+        "rasio_kapasitas_fiskal": 0.016
+      },
+      {
+        "rank_iprt": 20,
+        "nama": "Kabupaten Bombana",
+        "provinsi": "Sulawesi Tenggara",
+        "IPRT": 79.97076,
+        "pct_rusak_sedang_berat": 41.111668,
+        "p0_persen": 10.14,
+        "rls_tahun": 8.27,
+        "rasio_kapasitas_fiskal": 0.002
+      }
+    ],
+    "sensitivitas": {
+      "kendall_tau_median": 0.889995,
+      "kendall_tau_p05": 0.78281,
+      "tetap_kuintil_atas_median": 0.864078
+    },
+    "prioritas_pulau": [
+      {
+        "pulau": "Sumatera",
+        "n_prioritas": 29
+      },
+      {
+        "pulau": "Jawa",
+        "n_prioritas": 17
+      },
+      {
+        "pulau": "Bali-Nusa Tenggara",
+        "n_prioritas": 12
+      },
+      {
+        "pulau": "Kalimantan",
+        "n_prioritas": 4
+      },
+      {
+        "pulau": "Sulawesi",
+        "n_prioritas": 27
+      },
+      {
+        "pulau": "Maluku",
+        "n_prioritas": 6
+      },
+      {
+        "pulau": "Papua",
+        "n_prioritas": 8
+      }
+    ]
+  },
+  "simulasi": {
+    "tabel": [
+      {
+        "pendekatan": "Volume (jumlah rusak berat)",
+        "pangsa_ruang_rusak_berat": 50.667693,
+        "median_pct_rusak_sb": 35.54197,
+        "pangsa_fiskal_sangat_rendah_rendah": 75.728155,
+        "median_p0": 9.9,
+        "pangsa_jawa": 45.631068,
+        "pangsa_papua_maluku_nusa": 10.679612
+      },
+      {
+        "pendekatan": "IPRT",
+        "pangsa_ruang_rusak_berat": 24.897574,
+        "median_pct_rusak_sb": 43.456871,
+        "pangsa_fiskal_sangat_rendah_rendah": 92.23301,
+        "median_p0": 12.83,
+        "pangsa_jawa": 16.504854,
+        "pangsa_papua_maluku_nusa": 25.242718
+      }
+    ],
+    "irisan": 36,
+    "n_top": 103
+  },
+  "revitalisasi": [
+    {
+      "no": 1,
+      "kategori_bantuan": "Pembangunan Toilet",
+      "jumlah_sekolah": 8062,
+      "jumlah_data_bantuan": 8072,
+      "tahun": 2025
+    },
+    {
+      "no": 2,
+      "kategori_bantuan": "Rehabilitasi Ruang Kelas",
+      "jumlah_sekolah": 7580,
+      "jumlah_data_bantuan": 7647,
+      "tahun": 2025
+    },
+    {
+      "no": 3,
+      "kategori_bantuan": "Pembangunan Ruang UKS",
+      "jumlah_sekolah": 6863,
+      "jumlah_data_bantuan": 6865,
+      "tahun": 2025
+    },
+    {
+      "no": 4,
+      "kategori_bantuan": "Rehabilitasi Toilet",
+      "jumlah_sekolah": 3704,
+      "jumlah_data_bantuan": 3726,
+      "tahun": 2025
+    },
+    {
+      "no": 5,
+      "kategori_bantuan": "Rehabilitasi Ruang Administrasi",
+      "jumlah_sekolah": 2948,
+      "jumlah_data_bantuan": 2961,
+      "tahun": 2025
+    },
+    {
+      "no": 6,
+      "kategori_bantuan": "Pembangunan Ruang Kelas",
+      "jumlah_sekolah": 2668,
+      "jumlah_data_bantuan": 2681,
+      "tahun": 2025
+    },
+    {
+      "no": 7,
+      "kategori_bantuan": "Rehabilitasi Perpustakaan",
+      "jumlah_sekolah": 2491,
+      "jumlah_data_bantuan": 2493,
+      "tahun": 2025
+    },
+    {
+      "no": 8,
+      "kategori_bantuan": "Pembangunan Ruang Administrasi",
+      "jumlah_sekolah": 2239,
+      "jumlah_data_bantuan": 2244,
+      "tahun": 2025
+    },
+    {
+      "no": 9,
+      "kategori_bantuan": "Pembangunan Laboratorium",
+      "jumlah_sekolah": 2113,
+      "jumlah_data_bantuan": 2176,
+      "tahun": 2025
+    },
+    {
+      "no": 10,
+      "kategori_bantuan": "Pembangunan Perpustakaan",
+      "jumlah_sekolah": 1872,
+      "jumlah_data_bantuan": 1872,
+      "tahun": 2025
+    },
+    {
+      "no": 11,
+      "kategori_bantuan": "Rehabilitasi Laboratorium",
+      "jumlah_sekolah": 1313,
+      "jumlah_data_bantuan": 1425,
+      "tahun": 2025
+    },
+    {
+      "no": 12,
+      "kategori_bantuan": "Pembangunan Area Bermain",
+      "jumlah_sekolah": 939,
+      "jumlah_data_bantuan": 939,
+      "tahun": 2025
+    },
+    {
+      "no": 13,
+      "kategori_bantuan": "Rehabilitasi Ruang UKS",
+      "jumlah_sekolah": 721,
+      "jumlah_data_bantuan": 722,
+      "tahun": 2025
+    },
+    {
+      "no": 14,
+      "kategori_bantuan": "Rehabilitasi Rumah Dinas",
+      "jumlah_sekolah": 520,
+      "jumlah_data_bantuan": 521,
+      "tahun": 2025
+    },
+    {
+      "no": 15,
+      "kategori_bantuan": "Pembangunan Ruang BK",
+      "jumlah_sekolah": 483,
+      "jumlah_data_bantuan": 484,
+      "tahun": 2025
+    },
+    {
+      "no": 16,
+      "kategori_bantuan": "Pembangunan Rumah Dinas",
+      "jumlah_sekolah": 355,
+      "jumlah_data_bantuan": 355,
+      "tahun": 2025
+    },
+    {
+      "no": 17,
+      "kategori_bantuan": "Rehabilitasi Ruang Ibadah",
+      "jumlah_sekolah": 308,
+      "jumlah_data_bantuan": 308,
+      "tahun": 2025
+    },
+    {
+      "no": 18,
+      "kategori_bantuan": "Pembangunan Ruang OSIS",
+      "jumlah_sekolah": 176,
+      "jumlah_data_bantuan": 177,
+      "tahun": 2025
+    },
+    {
+      "no": 19,
+      "kategori_bantuan": "Rehabilitasi Ruang OSIS",
+      "jumlah_sekolah": 96,
+      "jumlah_data_bantuan": 97,
+      "tahun": 2025
+    },
+    {
+      "no": 20,
+      "kategori_bantuan": "Rehabilitasi Ruang BK",
+      "jumlah_sekolah": 94,
+      "jumlah_data_bantuan": 94,
+      "tahun": 2025
+    },
+    {
+      "no": 21,
+      "kategori_bantuan": "Pembangunan Prasarana Lainnya",
+      "jumlah_sekolah": 50,
+      "jumlah_data_bantuan": 60,
+      "tahun": 2025
+    },
+    {
+      "no": 22,
+      "kategori_bantuan": "Rehabilitasi Prasarana Penunjang Lainnya",
+      "jumlah_sekolah": 28,
+      "jumlah_data_bantuan": 28,
+      "tahun": 2025
+    },
+    {
+      "no": 23,
+      "kategori_bantuan": "Pembangunan Pusat Sumber Pendidikan Inklusif",
+      "jumlah_sekolah": 19,
+      "jumlah_data_bantuan": 19,
+      "tahun": 2025
+    },
+    {
+      "no": 24,
+      "kategori_bantuan": "Pembangunan Asrama Siswa",
+      "jumlah_sekolah": 18,
+      "jumlah_data_bantuan": 18,
+      "tahun": 2025
+    },
+    {
+      "no": 25,
+      "kategori_bantuan": "Rehabilitasi Asrama Siswa",
+      "jumlah_sekolah": 14,
+      "jumlah_data_bantuan": 14,
+      "tahun": 2025
+    },
+    {
+      "no": 26,
+      "kategori_bantuan": "Rehabilitasi Ruang Keterampilan",
+      "jumlah_sekolah": 8,
+      "jumlah_data_bantuan": 8,
+      "tahun": 2025
+    },
+    {
+      "no": 27,
+      "kategori_bantuan": "Pembangunan SATAP PAUD SD",
+      "jumlah_sekolah": 5,
+      "jumlah_data_bantuan": 5,
+      "tahun": 2025
+    },
+    {
+      "no": 28,
+      "kategori_bantuan": "Rehabilitasi Ruang Guru",
+      "jumlah_sekolah": 5,
+      "jumlah_data_bantuan": 5,
+      "tahun": 2025
+    },
+    {
+      "no": 29,
+      "kategori_bantuan": "Pembangunan Ruang Ibadah",
+      "jumlah_sekolah": 3,
+      "jumlah_data_bantuan": 3,
+      "tahun": 2025
+    },
+    {
+      "no": 30,
+      "kategori_bantuan": "Rehabilitasi Aula",
+      "jumlah_sekolah": 2,
+      "jumlah_data_bantuan": 2,
+      "tahun": 2025
+    },
+    {
+      "no": 31,
+      "kategori_bantuan": "Rehabilitasi Gudang/Pantry",
+      "jumlah_sekolah": 2,
+      "jumlah_data_bantuan": 2,
+      "tahun": 2025
+    },
+    {
+      "no": 32,
+      "kategori_bantuan": "Pembangunan Ruang Kesenian",
+      "jumlah_sekolah": 1,
+      "jumlah_data_bantuan": 1,
+      "tahun": 2025
+    },
+    {
+      "no": 33,
+      "kategori_bantuan": "Rehabilitasi Ruang Antara/Tangga",
+      "jumlah_sekolah": 1,
+      "jumlah_data_bantuan": 1,
+      "tahun": 2025
+    },
+    {
+      "no": 34,
+      "kategori_bantuan": "Rehabilitasi Ruang Kantin",
+      "jumlah_sekolah": 1,
+      "jumlah_data_bantuan": 1,
+      "tahun": 2025
+    }
+  ]
+}
