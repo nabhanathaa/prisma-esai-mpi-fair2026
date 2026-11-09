@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   LayoutDashboard, Map, SlidersHorizontal, Sigma, BookOpen,
-  Code2, LogOut, Loader2, Camera, Sun, Moon, Lock
+  LogOut, Loader2, Camera, Sun, Moon, Lock
 } from 'lucide-react'
 import { loadAll, LOGO_URL, ROLES_CONFIG } from './lib/data'
 import Login from './pages/Login'
@@ -12,7 +12,6 @@ import Pelaporan from './pages/Pelaporan'
 import Simulator from './pages/Simulator'
 import Analisis from './pages/Analisis'
 import Metodologi from './pages/Metodologi'
-import Kode from './pages/Kode'
 import Chatbot from './components/Chatbot'
 
 const ALL_NAV = [
@@ -20,8 +19,7 @@ const ALL_NAV = [
   { id: 'peta', label: 'Peta Interaktif', mobileLabel: 'Peta', icon: Map, el: Peta },
   { id: 'pelaporan', label: 'Pelaporan & Progres', mobileLabel: 'Lapor', icon: Camera, el: Pelaporan, badge: 'Baru' },
   { id: 'simulator', label: 'Simulasi Dua Jalur', mobileLabel: 'Simulasi', icon: SlidersHorizontal, el: Simulator, lockForPublic: true },
-  { id: 'analisis', label: 'Analisis Statistik', mobileLabel: 'Statistik', icon: Sigma, el: Analisis },
-  { id: 'kode', label: 'Kode Analisis', mobileLabel: 'Kode R', icon: Code2, el: Kode, onlyPusat: true },
+  { id: 'analisis', label: 'Statistik & Komputasi', mobileLabel: 'Statistik', icon: Sigma, el: Analisis },
   { id: 'metodologi', label: 'Metodologi & Data', mobileLabel: 'Metodologi', icon: BookOpen, el: Metodologi },
 ]
 
@@ -82,9 +80,6 @@ export default function App() {
       roleNo: r.no,
     }
     login(nextUser)
-    if (r.id !== 'pusat' && page === 'kode') {
-      setPage('metodologi')
-    }
   }
 
   const logout = () => {
@@ -96,35 +91,60 @@ export default function App() {
   }
 
   const go = (id, kode) => {
-    setFocus(kode || null)
-    setPage(id)
+    if (id === 'kode') {
+      setFocus('tab-kode')
+      setPage('analisis')
+    } else {
+      setFocus(kode || null)
+      setPage(id)
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (!user) return <Login onLogin={login} theme={theme} toggleTheme={toggleTheme} />
 
-  // Filter menu: Kode Analisis hanya ditampilkan untuk Peran 1 (Analis Pusat)
-  const visibleNav = ALL_NAV.filter(n => !n.onlyPusat || user.role === 'pusat')
-  const activeNav = visibleNav.find(n => n.id === page) || visibleNav[0]
+  const activeNav = ALL_NAV.find(n => n.id === page) || ALL_NAV[0]
   const Cur = activeNav.el
 
   return (
     <div className="shell">
-      {/* Header Atas Khusus Layar Mobile (Tampilan ala APK HP Modern) */}
+      {/* Header Atas Modern & Elegan untuk Layar Mobile / Tablet */}
       <header className="mobile-topbar">
         <div className="mt-brand" onClick={() => go('ringkasan')}>
           <img src={LOGO_URL} alt="Logo PRISMA" />
-          <div>
+          <div className="mt-brand-copy">
             <b>PRISMA</b>
             <span>{user.badge || `Peran · ${user.nama}`}</span>
           </div>
         </div>
         <div className="mt-actions">
-          <button type="button" className="icon" onClick={toggleTheme} title="Mode Terang / Gelap">
-            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          <div className="mt-role-pills" title="Ganti Peran Cepat">
+            {ROLES_CONFIG.map(r => (
+              <button
+                type="button"
+                key={r.id}
+                className={user.role === r.id ? 'on' : ''}
+                onClick={() => switchRole(r.id)}
+              >
+                P{r.no}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="mt-action-btn theme"
+            onClick={toggleTheme}
+            title="Mode Terang / Gelap"
+          >
+            {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
           </button>
-          <button type="button" className="icon" onClick={logout} title="Keluar">
-            <LogOut size={16} />
+          <button
+            type="button"
+            className="mt-action-btn exit"
+            onClick={logout}
+            title="Keluar dari Portal"
+          >
+            <LogOut size={15} />
           </button>
         </div>
       </header>
@@ -151,7 +171,7 @@ export default function App() {
         </div>
 
         <nav>
-          {visibleNav.map(n => {
+          {ALL_NAV.map(n => {
             const isLocked = n.lockForPublic && user.role === 'publik'
             return (
               <button
@@ -215,6 +235,26 @@ export default function App() {
                 <Cur data={data} user={user} go={go} focus={focus} onSwitchRole={switchRole} />
               </motion.div>
             </AnimatePresence>
+
+            <footer className="app-footer">
+              <div className="af-left">
+                <img src={LOGO_URL} alt="PRISMA" className="af-logo" />
+                <div>
+                  <b>PRISMA · Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial</b>
+                  <span>
+                    Karya Inovasi Tim PRISMA Politeknik Statistika STIS (Nabhan Athallah, Henny Syahrani, Reva Auliya Q. A.) · MPI FAIR 2026
+                  </span>
+                </div>
+              </div>
+              <div className="af-right">
+                <button type="button" className="link" onClick={() => go('metodologi')}>Metodologi &amp; Tim</button>
+                <span>·</span>
+                <button type="button" className="link" onClick={() => go('pelaporan')}>E-Lapor Geotagging</button>
+                <span>·</span>
+                <button type="button" className="link" onClick={() => go('analisis')}>Statistik &amp; Kode R</button>
+              </div>
+            </footer>
+
             <Chatbot data={data} user={user} go={go} onSwitchRole={switchRole} />
           </>
         )}

@@ -44,6 +44,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
   ])
 
   const endRef = useRef(null)
+  const dragMovedRef = useRef(false)
 
   useEffect(() => {
     if (open) {
@@ -283,7 +284,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-        .replace(/\*(.+?)\*/g, '<i>$1</i>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/`(.+?)`/g, '<code>$1</code>')
       return <p key={i} dangerouslySetInnerHTML={{ __html: html || '&nbsp;' }} />
     })
@@ -291,25 +292,41 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
 
   return (
     <>
-      {/* Tombol Mengambang (Floating Action Button) Chatbot PRISMA */}
+      {/* Tombol Mengambang (Floating Action Button) Chatbot PRISMA yang Dapat Digeser (Draggable) */}
       <motion.button
         type="button"
+        drag
+        dragMomentum={false}
+        onDragStart={() => {
+          dragMovedRef.current = false
+        }}
+        onDrag={(_, info) => {
+          if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
+            dragMovedRef.current = true
+          }
+        }}
         className={`chatbot-fab ${open ? 'is-open' : ''}`}
-        onClick={() => setOpen(o => !o)}
-        whileHover={{ scale: 1.04 }}
+        onClick={() => {
+          if (dragMovedRef.current) {
+            dragMovedRef.current = false
+            return
+          }
+          setOpen(o => !o)
+        }}
+        whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.96 }}
-        title="Buka Asisten Cerdas PRISMA AI"
+        title="Klik untuk membuka atau seret untuk memindahkan posisi tombol PRISMA AI"
       >
         {open ? (
-          <X size={20} />
+          <X size={18} />
         ) : (
           <>
             <div className="fab-icon-pulse">
-              <Bot size={20} />
+              <Bot size={16} />
             </div>
             <div className="fab-text">
               <b>Tanya PRISMA AI</b>
-              <small>Asisten Data 514 Kab/Kota</small>
+              <small>Chatbot 514 kab/kota</small>
             </div>
           </>
         )}
@@ -330,7 +347,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
                 <img src={LOGO_URL} alt="PRISMA" className="cbw-logo" />
                 <div>
                   <b>PRISMA AI Copilot</b>
-                  <span><i className="online-dot" /> Terhubung 514 Kab/Kota &amp; E-Lapor</span>
+                  <span><span className="online-dot" /> Terhubung 514 Kab/Kota &amp; E-Lapor</span>
                 </div>
               </div>
               <div className="cbw-tools">

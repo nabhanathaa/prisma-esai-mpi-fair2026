@@ -211,6 +211,7 @@ export const INITIAL_REPORTS = [
   {
     id: 'PRISMA-2026-8401',
     tanggal: '08 Nov 2026, 09:42 WIB',
+    tanggalIso: '2026-11-08',
     pelapor: 'Siti Rahmawati, S.Pd.',
     peranPelapor: 'Guru / Tenaga Kependidikan',
     email: 'siti.rahmawati.sdn2@gmail.com',
@@ -245,6 +246,7 @@ export const INITIAL_REPORTS = [
   {
     id: 'PRISMA-2026-8394',
     tanggal: '05 Nov 2026, 14:15 WIB',
+    tanggalIso: '2026-11-05',
     pelapor: 'Yohanes Bataona',
     peranPelapor: 'Orang Tua / Komite Sekolah',
     email: 'yohanes.komite.lembata@gmail.com',
@@ -282,6 +284,7 @@ export const INITIAL_REPORTS = [
   {
     id: 'PRISMA-2026-8310',
     tanggal: '29 Okt 2026, 11:20 WIB',
+    tanggalIso: '2026-10-29',
     pelapor: 'Drs. H. Mulyadi, M.Pd.',
     peranPelapor: 'Kepala Sekolah / Admin',
     email: 'kepsek.sdn3bangkalan@gmail.com',

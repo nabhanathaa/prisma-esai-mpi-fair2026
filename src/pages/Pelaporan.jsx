@@ -8,10 +8,10 @@ import {
   Building2, Landmark, UserCheck, Sparkles, Clock, ArrowUpRight,
   Check, X, Eye, Hammer, Award, Phone, Mail, User, Move,
   Droplets, HeartPulse, BookOpen, Compass, Utensils, FlaskConical,
-  Accessibility, ZoomIn, Maximize2, Info, Plus
+  Accessibility, ZoomIn, Maximize2, Info, Plus, Download, Filter, RotateCcw
 } from 'lucide-react'
 import {
-  INITIAL_REPORTS, createFieldPhotoPlaceholder, fmt, LOGO_URL,
+  INITIAL_REPORTS, createFieldPhotoPlaceholder, fmt, LOGO_URL, downloadCSV,
   SAMPLE_IMG_BEFORE,
   SAMPLE_IMG_BEFORE_ONLINE, SAMPLE_IMG_PROGRESS_ONLINE, SAMPLE_IMG_AFTER_ONLINE
 } from '../lib/data'
@@ -107,12 +107,13 @@ function loadStoredReports() {
             return {
               ...r,
               isSample: true,
+              tanggalIso: r.tanggalIso || initMap[r.id].tanggalIso || '2026-11-08',
               fotosBefore: initMap[r.id].fotosBefore,
               fotosProgress: initMap[r.id].fotosProgress,
               fotosAfter: initMap[r.id].fotosAfter,
             }
           }
-          return r
+          return { ...r, tanggalIso: r.tanggalIso || '2026-11-08' }
         })
       }
     }
@@ -135,8 +136,8 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
     }
   })
   const [showVerifyModal, setShowVerifyModal] = useState(false)
-  const [verName, setVerName] = useState(user.role === 'pusat' ? 'Tim Analis Pusdatin' : user.role === 'daerah' ? 'Admin Dinas / Kepala Sekolah' : '')
-  const [verEmail, setVerEmail] = useState(user.role === 'pusat' ? 'analis.pusdatin@gmail.com' : user.role === 'daerah' ? 'sarpras.dinas@gmail.com' : '')
+  const [verName, setVerName] = useState(user.email ? user.nama : user.role === 'pusat' ? 'Tim Analis Pusdatin' : user.role === 'daerah' ? 'Admin Dinas / Kepala Sekolah' : '')
+  const [verEmail, setVerEmail] = useState(user.email || (user.role === 'pusat' ? 'analis.pusdatin@gmail.com' : user.role === 'daerah' ? 'sarpras.dinas@gmail.com' : ''))
   const [verHp, setVerHp] = useState(user.role !== 'publik' ? '0812-8800-2026' : '')
   const [verUnsur, setVerUnsur] = useState(
     user.role === 'pusat' ? 'Analis Pusat (Kemendikdasmen/Pusdatin)' :
@@ -218,6 +219,13 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   const [afterCatatan, setAfterCatatan] = useState('')
   const [afterSuccess, setAfterSuccess] = useState('')
 
+  // State Filter & Unduh Laporan (Provinsi, Kab/Kota, Tahap, Rentang Tanggal)
+  const [filterProv, setFilterProv] = useState('ALL')
+  const [filterKab, setFilterKab] = useState('ALL')
+  const [filterStage, setFilterStage] = useState('ALL')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
+
   // Simpan perubahan laporan ke localStorage v5
   useEffect(() => {
     try { localStorage.setItem('prisma_reports_v5', JSON.stringify(reports)) } catch {}
@@ -226,6 +234,77 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   const provList = useMemo(() => [...new Set(kab.map(d => d.provinsi))].sort(), [kab])
   const kabList = useMemo(() => kab.filter(d => d.provinsi === prov).sort((a, b) => a.rank_iprt - b.rank_iprt), [kab, prov])
   const selectedKab = useMemo(() => kab.find(d => d.kode_bps === kodeBps) || kabList[0] || kab[0], [kab, kodeBps, kabList])
+
+  const reportProvOptions = useMemo(
+    () => [...new Set([...reports.map(r => r.provinsi), ...provList])].filter(Boolean).sort(),
+    [reports, provList]
+  )
+  const reportKabOptions = useMemo(() => {
+    const base = filterProv === 'ALL'
+      ? reports.map(r => r.kabkota)
+      : [
+          ...reports.filter(r => r.provinsi === filterProv).map(r => r.kabkota),
+          ...kab.filter(d => d.provinsi === filterProv).map(d => d.nama),
+        ]
+    return [...new Set(base)].filter(Boolean).sort()
+  }, [reports, kab, filterProv])
+
+  const filteredReports = useMemo(() => {
+    return reports.filter(r => {
+      if (filterProv !== 'ALL' && r.provinsi !== filterProv) return false
+      if (filterKab !== 'ALL' && r.kabkota !== filterKab) return false
+      if (filterStage !== 'ALL' && r.statusTahap !== filterStage) return false
+      const iso = r.tanggalIso || '2026-11-08'
+      if (filterDateFrom && iso < filterDateFrom) return false
+      if (filterDateTo && iso > filterDateTo) return false
+      return true
+    })
+  }, [reports, filterProv, filterKab, filterStage, filterDateFrom, filterDateTo])
+
+  const resetReportFilters = () => {
+    setFilterProv('ALL')
+    setFilterKab('ALL')
+    setFilterStage('ALL')
+    setFilterDateFrom('')
+    setFilterDateTo('')
+  }
+
+  const handleDownloadReportsCSV = () => {
+    const rows = filteredReports.map(r => ({
+      id_tiket: r.id,
+      tanggal_lapor: r.tanggal,
+      tanggal_iso: r.tanggalIso || '2026-11-08',
+      tahap_siklus: r.statusTahap === 'before' ? 'Before (Pengajuan)' : r.statusTahap === 'progress' ? 'On-Progress (Konstruksi)' : 'After (Selesai 100%)',
+      progres_persen: r.progresPersen,
+      nama_sekolah: r.sekolah,
+      npsn: r.npsn,
+      jenjang: r.jenjang,
+      kabupaten_kota: r.kabkota,
+      provinsi: r.provinsi,
+      skor_prisma_wilayah: r.skorPrisma,
+      peringkat_prisma_nasional: r.rankPrisma,
+      latitude: r.lat,
+      longitude: r.lng,
+      komponen_prasarana: Array.isArray(r.fasilitas) ? r.fasilitas.join(' | ') : r.fasilitas,
+      tingkat_kerusakan: r.tingkat,
+      ruang_terdampak: r.ruangTerdampak,
+      siswa_terdampak: r.siswaTerdampak,
+      nama_pelapor: r.pelapor,
+      peran_pelapor: r.peranPelapor,
+      status_verifikasi: r.statusLabel,
+      instansi_tujuan: r.instansiTujuan,
+      deskripsi_kondisi: r.deskripsi,
+    }))
+    const cols = [
+      'id_tiket', 'tanggal_lapor', 'tanggal_iso', 'tahap_siklus', 'progres_persen',
+      'nama_sekolah', 'npsn', 'jenjang', 'kabupaten_kota', 'provinsi',
+      'skor_prisma_wilayah', 'peringkat_prisma_nasional', 'latitude', 'longitude',
+      'komponen_prasarana', 'tingkat_kerusakan', 'ruang_terdampak', 'siswa_terdampak',
+      'nama_pelapor', 'peran_pelapor', 'status_verifikasi', 'instansi_tujuan', 'deskripsi_kondisi',
+    ]
+    const suffix = filterProv !== 'ALL' ? `_${filterProv.replace(/\s+/g, '_')}` : '_Nasional'
+    downloadCSV(rows, cols, `PRISMA_Laporan_Revitalisasi${suffix}.csv`)
+  }
 
   // Ketika Kabupaten/Kota berubah, otomatis arahkan peta & pin koordinat ke pusat Kabupaten/Kota tersebut
   const moveMapToKab = (targetKode, targetNama) => {
@@ -513,6 +592,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
             const newReport = {
               id: ticketId,
               tanggal: nowStr,
+              tanggalIso: new Date().toISOString().slice(0, 10),
               pelapor: verifiedInfo.nama,
               peranPelapor: verifiedInfo.unsur,
               email: verifiedInfo.email,
@@ -636,7 +716,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
           <span className="eyebrow">PARTISIPASI PUBLIK &amp; AKUNTABILITAS SIKLUS PENUH (CLOSED-LOOP GOVERNANCE)</span>
           <h1>Pelaporan Geotagging &amp; Pemantauan Progres Revitalisasi</h1>
           <p>
-            Laporkan kondisi infrastruktur sekolah secara <i>real-time</i> disertai bukti foto/video dan titik koordinat GPS, serta pantau tahapan pembangunan dari pengajuan awal (<b>Before</b>), pengerjaan konstruksi (<b>On-Progress</b>), hingga tuntas direvitalisasi (<b>After</b>).
+            Laporkan kondisi infrastruktur sekolah secara <em>real-time</em> disertai bukti foto/video dan titik koordinat GPS, serta pantau tahapan pembangunan dari pengajuan awal (<b>Before</b>), pengerjaan konstruksi (<b>On-Progress</b>), hingga tuntas direvitalisasi (<b>After</b>).
           </p>
         </div>
         <div className="ph-actions">
@@ -1157,20 +1237,104 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
             </div>
           </form>
 
-          {/* DAFTAR PANTAUAN LAPORAN PUBLIK (Dapat dilihat tanpa verifikasi) */}
+          {/* DAFTAR PANTAUAN LAPORAN PUBLIK & FITUR FILTER + UNDUH LAPORAN CSV */}
           <section className="card">
             <div className="card-head-row">
               <div>
-                <h3><Eye size={18} /> Daftar Pantauan Laporan &amp; Status Verifikasi Nasional</h3>
-                <p className="muted">Transparansi publik: masyarakat dapat memantau tiket laporan yang telah masuk tanpa harus login atau verifikasi ulang</p>
+                <h3><Eye size={18} /> Daftar Pantauan Laporan &amp; Unduh Data Verifikasi Nasional</h3>
+                <p className="muted">Transparansi publik: saring dan unduh laporan berdasarkan provinsi, kabupaten/kota, tahapan siklus, serta rentang tanggal</p>
               </div>
-              <span className="sim-note-pill">
-                <Info size={13} /> Data Simulasi Prototipe (Bukan Data Riil Sekolah)
-              </span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="sim-note-pill">
+                  <Info size={13} /> Data Simulasi Prototipe (Bukan Data Riil Sekolah)
+                </span>
+                <button
+                  type="button"
+                  className="btn primary sm"
+                  onClick={handleDownloadReportsCSV}
+                  disabled={filteredReports.length === 0}
+                >
+                  <Download size={14} /> Unduh Laporan CSV ({filteredReports.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Panel Filter Laporan (Provinsi, Kab/Kota, Tahap, Rentang Tanggal) */}
+            <div className="report-filter-bar">
+              <div className="rfb-head">
+                <span><Filter size={14} /> Filter &amp; Ekspor Laporan Revitalisasi</span>
+                {(filterProv !== 'ALL' || filterKab !== 'ALL' || filterStage !== 'ALL' || filterDateFrom || filterDateTo) && (
+                  <button type="button" className="btn ghost sm" onClick={resetReportFilters}>
+                    <RotateCcw size={13} /> Reset Filter
+                  </button>
+                )}
+              </div>
+              <div className="rfb-grid">
+                <label className="rf-field">
+                  <span>Provinsi</span>
+                  <select
+                    value={filterProv}
+                    onChange={e => {
+                      setFilterProv(e.target.value)
+                      setFilterKab('ALL')
+                    }}
+                  >
+                    <option value="ALL">Semua Provinsi</option>
+                    {reportProvOptions.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="rf-field">
+                  <span>Kabupaten / Kota</span>
+                  <select value={filterKab} onChange={e => setFilterKab(e.target.value)}>
+                    <option value="ALL">Semua Kabupaten/Kota</option>
+                    {reportKabOptions.map(k => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="rf-field">
+                  <span>Tahap Siklus</span>
+                  <select value={filterStage} onChange={e => setFilterStage(e.target.value)}>
+                    <option value="ALL">Semua Tahap (Before–After)</option>
+                    <option value="before">Tahap 1 · Before (Pengajuan)</option>
+                    <option value="progress">Tahap 2 · On-Progress (Konstruksi)</option>
+                    <option value="after">Tahap 3 · After (Selesai 100%)</option>
+                  </select>
+                </label>
+
+                <label className="rf-field">
+                  <span>Dari Tanggal</span>
+                  <input
+                    type="date"
+                    value={filterDateFrom}
+                    onChange={e => setFilterDateFrom(e.target.value)}
+                  />
+                </label>
+
+                <label className="rf-field">
+                  <span>Sampai Tanggal</span>
+                  <input
+                    type="date"
+                    value={filterDateTo}
+                    onChange={e => setFilterDateTo(e.target.value)}
+                  />
+                </label>
+              </div>
             </div>
 
             <div className="reports-feed">
-              {reports.map(r => {
+              {filteredReports.length === 0 ? (
+                <div className="empty-filter-state">
+                  <p>Tidak ditemukan laporan yang sesuai dengan kriteria filter di atas.</p>
+                  <button type="button" className="btn secondary sm" onClick={resetReportFilters}>
+                    <RotateCcw size={14} /> Tampilkan Semua Laporan ({reports.length})
+                  </button>
+                </div>
+              ) : filteredReports.map(r => {
                 const displayImg = r.statusTahap === 'after'
                   ? (r.fotosAfter?.[0] || SAMPLE_IMG_AFTER_ONLINE)
                   : r.statusTahap === 'progress'
