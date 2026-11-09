@@ -1,67 +1,35 @@
-# PRISMA
+# PRISMA · Sistem Prioritas & Pemantauan Revitalisasi Sekolah
 
-**PRISMA — Indeks Prioritas Revitalisasi Sekolah Berbasis Analisis Spasial untuk mewujudkan infrastruktur pendidikan yang adil, tangguh, inklusif, dan berkelanjutan di Indonesia.**
+**PRISMA — Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial untuk mewujudkan infrastruktur pendidikan yang adil, tangguh, inklusif, dan berkelanjutan di Indonesia.**
 
-Kepanjangan PRISMA: **Prioritas Revitalisasi Infrastruktur Sekolah melalui Model Analisis Spasial**. Aplikasi pendamping esai MPI FAIR 2026 ini memetakan kebutuhan 514 kabupaten/kota dengan menggabungkan kondisi ruang kelas, kerentanan sosial, dan kapasitas fiskal.
+Aplikasi pendamping esai **MPI FAIR 2026** (Sub-tema: *Inklusi Sosial dan Kesetaraan dalam Pendidikan*) yang memadukan **pemodelan ekonometrika spasial 514 kabupaten/kota (Top-Down)** dengan **pelaporan geotagging partisipatif & pemantauan siklus penuh Before–On-Progress–After (Bottom-Up)**.
 
-## Fitur
+## Fitur Utama
 
-| Halaman | Isi |
+| Halaman / Modul | Deskripsi & Hak Akses Berjenjang (RBAC) |
 |---|---|
-| Login | Tiga peran: Analis Pusat (Kemendikdasmen/Pusdatin), Dinas/Bappeda, Publik |
-| Ringkasan | KPI nasional, komposisi kondisi ruang kelas per jenjang, median per pulau, 10 besar PRISMA, revitalisasi 2025, dan alokasi dua jalur |
-| Peta Interaktif | Peta 514 kab/kota (Leaflet). Pilih variabel (PRISMA, % rusak, P0, RLS, fiskal, IPG, klaster LISA), filter pulau/provinsi, cari kab/kota, panel profil |
-| Prioritas & Simulator | Geser bobot K/S/F dan jumlah sasaran; bandingkan jalur kebutuhan absolut dengan jalur afirmasi PRISMA; ekspor CSV (bukan untuk akun Publik) |
-| Analisis Statistik | Kruskal–Wallis, Moran's I + LISA, OLS → uji LM robust → SEM, uji sensitivitas indeks |
-| Kode Analisis | Seluruh berkas R Markdown, dibagi per tahap, bisa disalin dan diunduh |
-| Metodologi & Data | Rumus, sumber data resmi, alur penerapan, keterbatasan |
+| **Portal Login & Tema** | Mendukung **Light Mode (Clear Royal Blue & White)** dan **Dark Mode (Deep Sapphire Navy)**, terintegrasi dengan identitas visual **Logo PRISMA**. |
+| **Ringkasan Nasional** | KPI nasional (2,03 juta ruang kelas), komposisi kondisi per jenjang, ketimpangan antarpulau (Kruskal–Wallis), 10 besar PRISMA, dan sintesis Alokasi Dua Jalur. |
+| **Peta Interaktif** | Peta tematik 514 kab/kota (Leaflet). Pilih 13 variabel (Skor PRISMA, % rusak, P0, RLS, kapasitas fiskal, IPG, klaster LISA), filter pulau/provinsi, dan tombol cepat lapor sekolah. |
+| **Pelaporan & Progres (Baru)** | **1. Ajukan Laporan (Before):** Kamera Foto/Video langsung + Upload Galeri (maks. 5 file), Geotagging GPS Realtime, Verifikasi Akun Anti-Bot/Spam, animasi proses pengiriman, dan E-Tiket Tanda Terima Resmi ke Pusdatin Kemendikdasmen & Dinas Pendidikan.<br>**2. Foto Progres (On-Progress):** Update fisik & serapan anggaran *(Khusus Peran 1 & 2; Terkunci bagi Peran 3)*.<br>**3. Selesai Revitalisasi (After):** Dokumentasi Before–After, BAST, dan audit fasilitas inklusif ramah disabilitas *(Khusus Peran 1 & 2; Terkunci bagi Peran 3)*. |
+| **Simulasi Dua Jalur** | Geser bobot K/S/F dan kuota sasaran; bandingkan Jalur Kebutuhan Absolut vs Jalur Afirmasi PRISMA; ekspor CSV *(Khusus Peran 1 & 2; Terkunci bagi Peran 3)*. |
+| **Analisis Statistik** | Hasil inferensial: Kruskal–Wallis, Moran's I global + LISA, regresi OLS → uji LM robust → Spatial Error Model (SEM, $\lambda = 0,562$), dan simulasi ketahanan bobot Dirichlet. |
+| **Kode Analisis** | Explorer 5 modul inti pipeline ekonometrika spasial R beserta unduhan `.Rmd` lengkap *(Dikhususkan hanya untuk Peran 1 — Analis Pusat)*. |
+| **Metodologi & Data** | Formulasi matematis indeks PRISMA, arsitektur tata kelola kolaboratif 3 peran, dan 8 sumber data resmi nasional tahun 2025. |
 
-## Akun demo
+## Tiga Peran Tata Kelola (Akun Demo)
 
-| Peran | Pengguna | Sandi |
-|---|---|---|
-| Analis Pusat | `pusdatin` | `atlas2025` |
-| Dinas / Bappeda | `dinas` | `atlas2025` |
-| Publik | `publik` | `publik` |
+| No | Peran | Pengguna | Sandi | Cakupan Hak Akses |
+|---|---|---|---|---|
+| **1** | **Analis Pusat** *(Kemendikdasmen / Pusdatin)* | `pusdatin` | `atlas2025` | Akses penuh seluruh modul (termasuk **Kode Analisis**, **Simulasi Dua Jalur**, serta manajemen **On-Progress** & **After**). |
+| **2** | **Dinas Terkait & Pihak Sekolah** *(Pemda, Dinas Pendidikan, Bappeda, Kepala Sekolah, Guru, Admin)* | `dinas` | `atlas2025` | Akses operasional daerah & sekolah: Laporan **Before**, Update **On-Progress**, Pengesahan **After**, **Simulasi Dua Jalur**, dan **Metodologi & Data**. |
+| **3** | **Masyarakat & Warga Sekolah** *(Siswa/Murid, Orang Tua/Wali, Komite, Publik)* | `publik` | `publik` | Akses pantauan terbuka Peta & Ringkasan (tanpa verifikasi), serta pengajuan **Laporan Before Ber-Geotagging** (wajib verifikasi akun anti-bot/spam). Menu Simulasi, On-Progress, dan After dikunci secara berjenjang. |
 
-> Login ini **hanya demo sisi klien** (tanpa server) untuk memperlihatkan konsep peran pengguna.
-> Sandi terlihat di kode sumber. Versi produksi perlu autentikasi server, misalnya SSO Kemendikdasmen.
-
-## Menjalankan di komputer
-
-Butuh Node.js 18 atau lebih baru.
+## Menjalankan Aplikasi
 
 ```bash
 npm install
-npm run dev        # buka http://localhost:5173
-npm run build      # hasil statis di folder dist/
-npm run preview    # uji hasil build
+npm run dev        # jalankan server pengembangan lokal
+npm run build      # bangun bundel produksi di folder dist/
+npm run preview    # pratinjau hasil build
 ```
-
-## Deploy ke GitHub Pages
-
-1. Buat repositori baru di GitHub, lalu unggah seluruh isi folder ini (termasuk folder `.github`).
-2. Di repositori: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Push ke cabang `main`. Workflow `.github/workflows/deploy.yml` akan membangun dan menerbitkan situs.
-4. Alamatnya: `https://<username>.github.io/<nama-repo>/`.
-
-Karena `base: './'` di `vite.config.js`, folder `dist/` juga bisa langsung diunggah ke Netlify, Vercel, atau hosting statis lain.
-
-## Data
-
-Semua data di `public/data/` dihasilkan oleh R Markdown analisis (berkas sumber masih memakai nama historis `ATLAS_Kelas_Analisis.Rmd`), dari dataset 2025:
-
-- `app_kabkota.json`: 514 baris, satu per kab/kota (kondisi ruang kelas, P0, RLS, kapasitas fiskal, IPG, K/S/F, IPRT, LISA)
-- `app_ringkasan.json`: hasil statistik (nasional, Kruskal–Wallis, Moran, regresi, IPRT, simulasi, revitalisasi)
-- `kabkota.geojson`: batas 514 kab/kota, disederhanakan dengan mapshaper (18%)
-
-Nama kolom `IPRT` dipertahankan pada berkas data sebagai skema internal dari analisis awal; antarmuka aplikasi menampilkannya sebagai skor PRISMA.
-
-Untuk memperbarui: jalankan ulang Rmd, salin dua file JSON dari `output/` ke `public/data/`, lalu build ulang.
-
-Sumber: Dapodik 2025 (Kemendikdasmen), BPS 2025, PMK 97/2025 (Kemenkeu), Indeks Pemerataan Guru 2025, Pusdatin Revitalisasi 2025.
-Peta dasar menggunakan tile publik OpenStreetMap, tanpa API key (memerlukan internet; batas wilayah dan data tematik tetap tersedia saat peta dasar dimatikan).
-
-## Teknologi
-
-React 18, Vite 5, Leaflet + react-leaflet, Recharts, Framer Motion, Lucide.

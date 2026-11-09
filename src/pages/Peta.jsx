@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, Layers, MapPin } from 'lucide-react'
+import { Search, X, Layers, MapPin, Camera } from 'lucide-react'
 import { VARS, PULAU, RAMP_RISK, RAMP_GOOD, LISA_COLORS, quantileBreaks, colorFor, fmt, fmtInt } from '../lib/data'
 
 function FitTo({ bounds, panel }) {
@@ -22,7 +22,7 @@ const Meter = ({ label, v, color }) => (
   <div className="meter"><span>{label}</span><div><i style={{ width: `${Math.round(v * 100)}%`, background: color }} /></div><b>{Math.round(v * 100)}</b></div>
 )
 
-export default function Peta({ data, focus }) {
+export default function Peta({ data, focus, go }) {
   const { geo, byKode, kab } = data
   const [vk, setVk] = useState('IPRT')
   const [pulau, setPulau] = useState('Semua')
@@ -55,9 +55,14 @@ export default function Peta({ data, focus }) {
   const style = f => {
     const d = byKode[f.properties.kode_bps]
     const on = inFilter(d)
-    const fill = v.cat ? LISA_COLORS[d?.lisa] || '#2B3448' : colorFor(d?.[vk], breaks, ramp)
+    const fill = v.cat ? LISA_COLORS[d?.lisa] || '#64748B' : colorFor(d?.[vk], breaks, ramp)
     const isSel = sel && d && sel.kode_bps === d.kode_bps
-    return { fillColor: fill, fillOpacity: on ? 0.9 : 0.12, color: isSel ? '#fff' : 'rgba(11,18,32,.9)', weight: isSel ? 2.5 : 0.5 }
+    return {
+      fillColor: fill,
+      fillOpacity: on ? 0.88 : 0.14,
+      color: isSel ? '#0B3B75' : 'rgba(15, 23, 42, 0.45)',
+      weight: isSel ? 2.6 : 0.6,
+    }
   }
 
   const onEach = (f, layer) => {
@@ -65,10 +70,10 @@ export default function Peta({ data, focus }) {
     if (!d) return
     layer.bindTooltip(() => {
       const val = v.cat ? d.lisa : `${fmt(d[vk], v.dec)}${v.unit}`
-      return `<div class="mtip"><b>${d.nama}</b><small>${d.provinsi}</small><div>${v.label}: <b>${val}</b></div><div>Peringkat PRISMA: <b>${d.rank_iprt}</b> / 514</div></div>`
+      return `<div class="mtip"><b>${d.nama}</b><small>${d.provinsi}</small><div>${v.label}: <b>${val}</b></div><div>Peringkat PRISMA: <b>#${d.rank_iprt}</b> / 514</div></div>`
     }, { sticky: true, direction: 'top', opacity: 1, className: 'mtip-wrap' })
     layer.on({
-      mouseover: e => e.target.setStyle({ weight: 2, color: '#fff' }),
+      mouseover: e => e.target.setStyle({ weight: 2.2, color: '#0284C7' }),
       mouseout: e => geoRef.current?.resetStyle(e.target),
       click: () => setSel(d),
     })
@@ -84,21 +89,25 @@ export default function Peta({ data, focus }) {
   return (
     <div className="page">
       <header className="ph">
-        <div><h1>Peta Interaktif</h1><p>Pilih variabel, kelompok pulau, atau provinsi. Arahkan kursor untuk ringkasan, klik untuk profil lengkap.</p></div>
+        <div>
+          <span className="eyebrow">PEMETAAN TEMATIK SPASIAL · 514 KABUPATEN/KOTA (TERBUKA TANPA VERIFIKASI)</span>
+          <h1>Peta Interaktif Kerentanan &amp; Prioritas Sekolah</h1>
+          <p>Pilih indikator spasial, pulau, atau provinsi. Arahkan kursor untuk ringkasan cepat dan klik wilayah untuk melihat profil lengkap.</p>
+        </div>
       </header>
 
       <div className="filters">
-        <label><span>Variabel</span>
+        <label><span>Variabel Peta</span>
           <select value={vk} onChange={e => setVk(e.target.value)}>{VARS.map(x => <option key={x.key} value={x.key}>{x.label}</option>)}</select>
         </label>
-        <label><span>Pulau</span>
+        <label><span>Kelompok Pulau</span>
           <select value={pulau} onChange={e => { setPulau(e.target.value); setProv('Semua') }}><option>Semua</option>{PULAU.map(p => <option key={p}>{p}</option>)}</select>
         </label>
         <label><span>Provinsi</span>
           <select value={prov} onChange={e => setProv(e.target.value)}><option>Semua</option>{provList.map(p => <option key={p}>{p}</option>)}</select>
         </label>
-        <label className="search"><span>Cari kab/kota</span>
-          <div className="sbox"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="mis. Lembata" />
+        <label className="search"><span>Cari Kabupaten/Kota</span>
+          <div className="sbox"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Mis. Banggai Laut / Lembata" />
             {hits.length > 0 && <ul>{hits.map(h => <li key={h.kode_bps} onClick={() => { setSel(h); setQ(''); setPulau('Semua'); setProv(h.provinsi) }}>{h.nama}<small>{h.provinsi}</small></li>)}</ul>}
           </div>
         </label>
@@ -114,7 +123,7 @@ export default function Peta({ data, focus }) {
 
         <div className="maplegend">
           <b>{v.label}</b><small>{v.desc}{!v.cat && ' · kelas kuantil'}</small>
-          <small className="map-source">Peta dasar publik · tanpa API key</small>
+          <small className="map-source">Peta dasar OpenStreetMap · Akses terbuka</small>
           {legendItems.map(l => <div key={l.t}><i style={{ background: l.c }} />{l.t}</div>)}
           {(pulau !== 'Semua' || prov !== 'Semua') && <div className="muted">Wilayah di luar filter dipudarkan</div>}
         </div>
@@ -130,12 +139,12 @@ export default function Peta({ data, focus }) {
                 <div><span>Kelas</span><b className={`badge k-${sel.kelas_iprt.replace(' ', '-').toLowerCase()}`}>{sel.kelas_iprt}</b></div>
               </div>
               <h4>Komponen indeks (persentil)</h4>
-              <Meter label="K · Kerusakan" v={sel.K} color="#E5484D" />
-              <Meter label="S · Kerentanan sosial" v={sel.S} color="#E08A35" />
-              <Meter label="F · Kelemahan fiskal" v={sel.F} color="#38AFC8" />
+              <Meter label="K · Kerusakan" v={sel.K} color="#EF4444" />
+              <Meter label="S · Kerentanan sosial" v={sel.S} color="#F59E0B" />
+              <Meter label="F · Kelemahan fiskal" v={sel.F} color="#0284C7" />
               <h4>Kondisi ruang kelas</h4>
               <div className="stack">
-                {[['baik_total', '#3FA6AC'], ['rusak_ringan_total', '#C9B458'], ['rusak_sedang_total', '#E08A35'], ['rusak_berat_total', '#E5484D']].map(([k, c]) => (
+                {[['baik_total', '#0284C7'], ['rusak_ringan_total', '#38BDF8'], ['rusak_sedang_total', '#F59E0B'], ['rusak_berat_total', '#EF4444']].map(([k, c]) => (
                   <i key={k} style={{ flex: sel[k], background: c }} title={`${k}: ${sel[k]}`} />
                 ))}
               </div>
@@ -151,6 +160,16 @@ export default function Peta({ data, focus }) {
                 <dt>Pemerataan guru SD</dt><dd>{fmt(sel.ipg_sd, 2)}</dd>
                 <dt>Klaster LISA</dt><dd>{sel.lisa}</dd>
               </dl>
+              {go && (
+                <button
+                  type="button"
+                  className="btn primary sm"
+                  style={{ width: '100%', marginTop: 14 }}
+                  onClick={() => go('pelaporan')}
+                >
+                  <Camera size={14} /> Laporkan Sekolah di Wilayah Ini
+                </button>
+              )}
             </motion.aside>
           )}
         </AnimatePresence>

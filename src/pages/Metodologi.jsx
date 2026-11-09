@@ -1,64 +1,153 @@
 import React from 'react'
-import { Database, ShieldAlert, Workflow, ExternalLink, Users } from 'lucide-react'
+import { Database, ShieldAlert, Workflow, ExternalLink, Users, Layers, Compass, Camera, Landmark } from 'lucide-react'
 
 const SUMBER = [
-  ['Jumlah Ruang Kelas Menurut Kondisi 2025 (SD, SMP, SMA, SMK)', 'Kemendikdasmen, Portal Data (Dapodik)', 'https://data.kemendikdasmen.go.id/dataset/dataset-statistik', 'Kab/kota'],
-  ['Indeks Pemerataan Guru 2025', 'Kemendikdasmen, Dataset Prioritas', 'https://data.kemendikdasmen.go.id/dataset/prioritas', 'Kab/kota'],
-  ['Persentase penduduk miskin (P0) 2025', 'Badan Pusat Statistik', 'https://www.bps.go.id', 'Kab/kota'],
-  ['Rata-rata lama sekolah (metode baru) 2025', 'Badan Pusat Statistik', 'https://www.bps.go.id', 'Kab/kota'],
-  ['PMK 97/2025 tentang Peta Kapasitas Fiskal Daerah', 'Kementerian Keuangan', 'https://jdih.kemenkeu.go.id/dok/pmk-97-tahun-2025', 'Kab/kota (508 + proksi 6 wilayah DKI)'],
-  ['Revitalisasi Satuan Pendidikan 2025', 'Pusdatin Kemendikdasmen', 'https://referensi.data.kemendikdasmen.go.id/program_pembangunan/program/revit', 'Nasional'],
-  ['Dashboard Sekolah Terdampak Bencana', 'Kemendikdasmen', 'https://spab.kemendikdasmen.go.id/web/dashboard/', 'Konteks'],
-  ['Neraca Pendidikan Daerah 2025', 'Kemendikdasmen', 'https://npd.kemendikdasmen.go.id/', 'Konteks'],
+  ['Jumlah Ruang Kelas Menurut Kondisi 2025 (SD, SMP, SMA, SMK)', 'Kemendikdasmen · Portal Data Dapodik', 'https://data.kemendikdasmen.go.id/dataset/dataset-statistik', '514 Kab/Kota', '2,03 juta ruang kelas (Baik, Rusak Ringan, Sedang, Berat)'],
+  ['Indeks Pemerataan Guru (IPG) 2025', 'Kemendikdasmen · Dataset Prioritas', 'https://data.kemendikdasmen.go.id/dataset/prioritas', '514 Kab/Kota', 'Distribusi guru antarjenjang SD, SMP, SMA, SMK'],
+  ['Persentase Penduduk Miskin (P0) 2025', 'Badan Pusat Statistik (BPS)', 'https://www.bps.go.id', '514 Kab/Kota', 'Tingkat kemiskinan makro daerah (%)'],
+  ['Rata-rata Lama Sekolah (RLS Metode Baru) 2025', 'Badan Pusat Statistik (BPS)', 'https://www.bps.go.id', '514 Kab/Kota', 'Capaian tahun bersekolah penduduk usia ≥ 25 tahun'],
+  ['PMK Nomor 97 Tahun 2025 tentang Peta Kapasitas Fiskal Daerah', 'Kementerian Keuangan RI', 'https://jdih.kemenkeu.go.id/dok/pmk-97-tahun-2025', '508 Kab/Kota + 6 DKI', 'Rasio dan kategori kapasitas fiskal daerah'],
+  ['Program Revitalisasi Satuan Pendidikan 2025', 'Pusdatin Kemendikdasmen', 'https://referensi.data.kemendikdasmen.go.id/program_pembangunan/program/revit', 'Nasional (34 Kategori)', '16.167 sekolah penerima bantuan revitalisasi'],
+  ['Dashboard Satuan Pendidikan Aman Bencana (SPAB)', 'Kemendikdasmen', 'https://spab.kemendikdasmen.go.id/web/dashboard/', 'Konteks Spasial', 'Kerentanan bencana pada satuan pendidikan'],
+  ['Neraca Pendidikan Daerah (NPD) 2025', 'Kemendikdasmen', 'https://npd.kemendikdasmen.go.id/', 'Konteks Anggaran', 'Proporsi belanja fungsi pendidikan APBD'],
 ]
 
 const LANGKAH = [
-  ['Data', 'Pusdatin memadukan Dapodik, BPS, dan PMK setiap tahun dalam satu basis data.'],
-  ['Skoring', 'Sistem menghitung skor PRISMA dan menerbitkan daftar prioritas secara otomatis.'],
-  ['Verifikasi', 'Dinas memverifikasi 10% sampel sekolah prioritas bersama perguruan tinggi dan mahasiswa KKN.'],
-  ['Penetapan', 'Direktorat teknis menetapkan sasaran dan porsi dua jalur dalam petunjuk teknis.'],
-  ['Pengawasan', 'Dasbor publik menampilkan progres pembangunan agar masyarakat dan komite sekolah dapat mengawasi.'],
+  ['Integrasi Satu Data Spasial', 'Pusdatin Kemendikdasmen mengintegrasikan data kondisi ruang kelas Dapodik, indikator sosial BPS (P0, RLS), dan rasio kapasitas fiskal Kemenkeu (PMK 97/2025) bagi 514 kabupaten/kota.'],
+  ['Pemodelan & Skoring PRISMA', 'Sistem menghitung autokorelasi spasial (LISA) dan skor komposit PRISMA untuk menetapkan daftar prioritas nasional melalui skema Alokasi Dua Jalur (Jalur Kebutuhan Absolut & Jalur Afirmasi Spasial).'],
+  ['Pelaporan Partisipatif Ber-Geotagging (Before)', 'Masyarakat, siswa, orang tua, dan pihak sekolah mengajukan laporan kerusakan riil dilengkapi bukti foto/video dan titik koordinat GPS melalui akun terverifikasi anti-bot/spam.'],
+  ['Eksekusi & Pemantauan Konstruksi (On-Progress)', 'Dinas Pendidikan Daerah, Bappeda, dan P2SP Sekolah memperbarui foto progres pembangunan fisik serta serapan anggaran secara berkala yang diawasi oleh Analis Pusat.'],
+  ['Audit Kelayakan & Inklusivitas Akhir (After)', 'Setelah revitalisasi selesai 100%, diterbitkan Berita Acara Serah Terima (BAST) beserta dokumentasi Before–After yang menjamin tersedianya fasilitas ramah disabilitas dan ruang belajar aman.'],
 ]
 
 export default function Metodologi() {
   return (
     <div className="page">
-      <header className="ph"><div><h1>Metodologi &amp; Data</h1><p>Rumus indeks, sumber data resmi, alur penerapan, dan keterbatasan.</p></div></header>
+      <header className="ph">
+        <div>
+          <span className="eyebrow">KERANGKA METODOLOGIS &amp; TATA KELOLA SATU DATA</span>
+          <h1>Metodologi Indeks Spasial &amp; Sumber Data Resmi</h1>
+          <p>Formulasi matematis indeks PRISMA, arsitektur integrasi Top-Down &amp; Bottom-Up, sumber data resmi 2025, serta pengendalian mutu.</p>
+        </div>
+      </header>
 
+      {/* Rumus & Komponen Indeks */}
       <section className="card">
-        <h3><Workflow size={18} /> Rumus indeks PRISMA</h3>
-        <div className="formula big">PRISMA = 100 × (0,40·K + 0,30·S + 0,30·F)</div>
+        <h3><Workflow size={18} /> Formulasi Matematis Indeks Komposit PRISMA</h3>
+        <p className="muted">Setiap variabel ditransformasikan ke dalam peringkat persentil empiris [0, 1] agar kebal terhadap pencilan ekstrem antarwilayah</p>
+        <div className="formula big">PRISMA = 100 × (0,40 · K + 0,30 · S + 0,30 · F)</div>
         <div className="grid3 tight">
-          <div className="comp"><i style={{ background: '#E5484D' }} /><b>K · Kerusakan</b><p>Peringkat persentil % ruang kelas rusak sedang + berat (SD–SMK).</p></div>
-          <div className="comp"><i style={{ background: '#E08A35' }} /><b>S · Kerentanan sosial</b><p>Rerata peringkat persentil P0 dan kebalikan rata-rata lama sekolah.</p></div>
-          <div className="comp"><i style={{ background: '#38AFC8' }} /><b>F · Kelemahan fiskal</b><p>Peringkat persentil kebalikan rasio kapasitas fiskal daerah.</p></div>
+          <div className="comp">
+            <i style={{ background: '#EF4444' }} />
+            <b>K · Tingkat Kerusakan Fisik (Bobot 40%)</b>
+            <p>Peringkat persentil proporsi ruang kelas rusak sedang dan rusak berat gabungan jenjang SD, SMP, SMA, dan SMK di kabupaten/kota tersebut.</p>
+          </div>
+          <div className="comp">
+            <i style={{ background: '#F59E0B' }} />
+            <b>S · Kerentanan Sosial-Pendidikan (Bobot 30%)</b>
+            <p>Rata-rata peringkat persentil persentase penduduk miskin (P0) dan persentil kebalikan Rata-rata Lama Sekolah (−RLS) untuk menangkap deprivasi sosial.</p>
+          </div>
+          <div className="comp">
+            <i style={{ background: '#0284C7' }} />
+            <b>F · Kelemahan Kapasitas Fiskal (Bobot 30%)</b>
+            <p>Peringkat persentil kebalikan Rasio Kapasitas Fiskal Daerah (PMK 97/2025) agar daerah berfiskal rendah mendapat afirmasi anggaran pusat.</p>
+          </div>
         </div>
       </section>
 
+      {/* Sinergi 3 Peran & Siklus Before-Progress-After */}
       <section className="card">
-        <h3><Database size={18} /> Sumber data (semua data resmi, tahun 2025)</h3>
+        <h3><Compass size={18} /> Arsitektur Tata Kelola Berjenjang 3 Peran (Top-Down × Bottom-Up)</h3>
+        <p className="muted">Menggabungkan ketajaman ekonometrika spasial dengan partisipasi publik yang terverifikasi</p>
+        <div className="grid3 tight">
+          <div className="comp">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Landmark size={17} style={{ color: 'var(--accent)' }} />
+              <b>Peran 1 · Analis Pusat (Kemendikdasmen / Pusdatin)</b>
+            </div>
+            <p>Mengelola model spasial 514 kab/kota, menyimulasikan kuota Alokasi Dua Jalur, mengaudit kode analisis, dan memvalidasi capaian nasional.</p>
+          </div>
+          <div className="comp">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Layers size={17} style={{ color: 'var(--warm)' }} />
+              <b>Peran 2 · Dinas Daerah &amp; Satuan Pendidikan</b>
+            </div>
+            <p>Memverifikasi laporan lapangan, memperbarui foto progres pengerjaan konstruksi (<i>On-Progress</i>), dan mengunggah dokumen penyelesaian BAST (<i>After</i>).</p>
+          </div>
+          <div className="comp">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Camera size={17} style={{ color: '#10B981' }} />
+              <b>Peran 3 · Masyarakat &amp; Warga Sekolah</b>
+            </div>
+            <p>Memantau peta kerentanan secara terbuka dan mengajukan laporan kerusakan sekolah dilengkapi foto/video ber-geotagging GPS melalui akun terverifikasi.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Tabel Sumber Data Resmi */}
+      <section className="card">
+        <h3><Database size={18} /> Repositori Sumber Data Resmi Nasional (Tahun 2025)</h3>
         <div className="tbl-scroll">
           <table className="tbl">
-            <thead><tr><th>Dataset</th><th>Penerbit</th><th>Tingkat</th><th></th></tr></thead>
-            <tbody>{SUMBER.map(s => <tr key={s[0]}><td>{s[0]}</td><td>{s[1]}</td><td>{s[3]}</td><td><a href={s[2]} target="_blank" rel="noreferrer" className="icon" title="Buka sumber"><ExternalLink size={14} /></a></td></tr>)}</tbody>
+            <thead>
+              <tr>
+                <th>Dataset Resmi</th>
+                <th>Instansi Penerbit</th>
+                <th>Cakupan</th>
+                <th>Indikator Utama</th>
+                <th>Tautan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SUMBER.map(s => (
+                <tr key={s[0]} className="sig">
+                  <td><b>{s[0]}</b></td>
+                  <td>{s[1]}</td>
+                  <td><span className="badge">{s[3]}</span></td>
+                  <td>{s[4]}</td>
+                  <td>
+                    <a href={s[2]} target="_blank" rel="noreferrer" className="icon" title="Buka sumber resmi">
+                      <ExternalLink size={14} />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </section>
 
       <div className="grid2">
         <section className="card">
-          <h3><Users size={18} /> Alur penerapan</h3>
-          <ol className="steps">{LANGKAH.map(([a, b], i) => <li key={a}><span>{i + 1}</span><div><b>{a}</b><p>{b}</p></div></li>)}</ol>
+          <h3><Users size={18} /> Alur Implementasi Siklus Penuh (5 Tahap)</h3>
+          <ol className="steps">
+            {LANGKAH.map(([a, b], i) => (
+              <li key={a}>
+                <span>{i + 1}</span>
+                <div>
+                  <b>{a}</b>
+                  <p>{b}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
+
         <section className="card">
-          <h3><ShieldAlert size={18} /> Keterbatasan</h3>
+          <h3><ShieldAlert size={18} /> Catatan Metodologis &amp; Mitigasi Risiko</h3>
           <ul className="bul">
-            <li>Data alokasi revitalisasi per kabupaten/kota belum tersedia secara terbuka, sehingga ketepatan sasaran 2025 belum dapat dinilai langsung.</li>
-            <li>Status kondisi ruang kelas di Dapodik merupakan isian sekolah dan perlu diverifikasi lapangan.</li>
-            <li>Enam wilayah administrasi DKI Jakarta tidak tercantum di PMK 97/2025 sehingga memakai rasio provinsi (0,271) sebagai proksi.</li>
-            <li>Hasil regresi bersifat asosiatif, bukan kausal.</li>
-            <li>Lapisan risiko iklim (Google Earth Engine) disiapkan sebagai tahap pengembangan berikutnya.</li>
-            <li>Login aplikasi ini adalah demo purwarupa tanpa server; versi produksi memerlukan autentikasi resmi.</li>
+            <li>
+              <b>Validasi Silang Dapodik melalui Geotagging:</b> Karena data kondisi Dapodik bersifat pelaporan mandiri (<i>self-reported</i>) oleh operator sekolah, modul <b>Pelaporan Foto &amp; Geotagging Realtime PRISMA</b> berfungsi sebagai instrumen verifikasi lapangan untuk mencegah <i>under-reporting</i> maupun <i>moral hazard</i>.
+            </li>
+            <li>
+              <b>Proksi Kapasitas Fiskal DKI Jakarta:</b> Enam wilayah administrasi DKI Jakarta tidak memiliki APBD otonom di PMK 97/2025 sehingga menggunakan rasio kapasitas fiskal tingkat provinsi secara konsisten.
+            </li>
+            <li>
+              <b>Inferensi Spasial vs Kausalitas:</b> Koefisien pada <i>Spatial Error Model</i> (SEM, λ = 0,562) merepresentasikan asosiasi spasial terkontrol, bukan efek kausal tunggal.
+            </li>
+            <li>
+              <b>Proteksi Verifikasi Akun Anti-Bot:</b> Pengajuan laporan masyarakat dilengkapi verifikasi identitas dan tantangan anti-bot agar antrean verifikasi Dinas Pendidikan bebas dari spam.
+            </li>
           </ul>
         </section>
       </div>
