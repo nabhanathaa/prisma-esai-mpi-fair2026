@@ -192,8 +192,16 @@ export function createFieldPhotoPlaceholder({ title, subtitle, coords, date, sta
     <text x="24" y="356" fill="#CBD5E1" font-family="sans-serif" font-size="13">${subtitle}</text>
     <text x="24" y="380" fill="${palette.accent}" font-family="monospace" font-size="12">GPS: ${coords}  |  TIMESTAMP: ${date}  |  PRISMA VERIFIED</text>
   </svg>`
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
+
+export const SAMPLE_IMG_BEFORE = `${BASE}contoh-bangunan-sekolah-rusak.jpg`
+export const SAMPLE_IMG_PROGRESS = `${BASE}contoh-bangunan-sekolah-sedang-direnovasi.jpg`
+export const SAMPLE_IMG_AFTER = `${BASE}contoh-bangunan-sekolah-selesai-direnovasi.jpg`
+
+export const SAMPLE_IMG_BEFORE_ONLINE = 'https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1200&q=80'
+export const SAMPLE_IMG_PROGRESS_ONLINE = 'https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=1200&q=80'
+export const SAMPLE_IMG_AFTER_ONLINE = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80'
 
 export const INITIAL_REPORTS = [
   {
@@ -215,7 +223,7 @@ export const INITIAL_REPORTS = [
     lat: -1.6142,
     lng: 123.4985,
     akurasi: 4.2,
-    fasilitas: 'Ruang Kelas & Atap Struktur',
+    fasilitas: ['Ruang Kelas Utama & Rangka Atap', 'Sanitasi / Toilet Siswa'],
     tingkat: 'Rusak Berat',
     ruangTerdampak: 4,
     siswaTerdampak: 118,
@@ -225,15 +233,7 @@ export const INITIAL_REPORTS = [
     statusLabel: 'Terverifikasi Pusdatin & Dinas · Menunggu Eksekusi',
     instansiTujuan: 'Pusdatin Kemendikdasmen & Dinas Pendidikan Kab. Banggai Laut',
     progresPersen: 15,
-    fotosBefore: [
-      createFieldPhotoPlaceholder({
-        title: 'SDN 2 Banggai Laut · R. Kelas IV & V',
-        subtitle: 'Kuda-kuda atap lapuk & plafon ambrol (4 ruang terdampak)',
-        coords: '-1.6142° S, 123.4985° E (±4.2m)',
-        date: '2026-11-08 09:40 WITA',
-        stage: 'before',
-      }),
-    ],
+    fotosBefore: [SAMPLE_IMG_BEFORE],
     fotosProgress: [],
     fotosAfter: [],
     catatanDinas: 'Telah diverifikasi oleh Tim Teknis Sarpras Dinas Pendidikan Kab. Banggai Laut. Masuk daftar prioritas utama Jalur Afirmasi PRISMA Kuartal I.',
@@ -257,7 +257,7 @@ export const INITIAL_REPORTS = [
     lat: -8.4628,
     lng: 123.5419,
     akurasi: 5.0,
-    fasilitas: 'Ruang Kelas & Sanitasi Inklusif',
+    fasilitas: ['Ruang Kelas Utama & Rangka Atap', 'Sanitasi / Toilet Siswa', 'Aksesibilitas / Ramp Kursi Roda'],
     tingkat: 'Rusak Berat',
     ruangTerdampak: 5,
     siswaTerdampak: 164,
@@ -270,24 +270,8 @@ export const INITIAL_REPORTS = [
     kontraktor: 'Tim Pelaksana Swakelola P2SP & CV Karya Flobamora',
     anggaranSerapan: 'Rp 845.000.000 (Termin II - 70%)',
     targetSelesai: '20 Desember 2026',
-    fotosBefore: [
-      createFieldPhotoPlaceholder({
-        title: 'SMPN 1 Atadei Lembata · Kondisi Awal',
-        subtitle: 'Retakan dinding struktur & kerusakan rangka atap',
-        coords: '-8.4628° S, 123.5419° E (±5.0m)',
-        date: '2026-09-12 10:15 WITA',
-        stage: 'before',
-      }),
-    ],
-    fotosProgress: [
-      createFieldPhotoPlaceholder({
-        title: 'SMPN 1 Atadei · Progres Minggu Ke-8 (68%)',
-        subtitle: 'Pemasangan rangka baja ringan, sloof beton bertulang & ramp disabilitas',
-        coords: '-8.4628° S, 123.5419° E (±3.8m)',
-        date: '2026-11-05 14:10 WITA',
-        stage: 'progress',
-      }),
-    ],
+    fotosBefore: [SAMPLE_IMG_BEFORE],
+    fotosProgress: [SAMPLE_IMG_PROGRESS],
     fotosAfter: [],
     catatanDinas: 'Struktur kolom beton bertulang dan rangka atap baja ringan telah terpasang 100%. Saat ini tahap pengerjaan lantai keramik anti-slip dan toilet ramah disabilitas.',
   },
@@ -310,7 +294,7 @@ export const INITIAL_REPORTS = [
     lat: -7.0865,
     lng: 112.8421,
     akurasi: 3.5,
-    fasilitas: 'Ruang Kelas, UKS & Akses Disabilitas',
+    fasilitas: ['Ruang Kelas Utama & Rangka Atap', 'Ruang UKS', 'Sanitasi / Toilet Siswa'],
     tingkat: 'Rusak Berat',
     ruangTerdampak: 6,
     siswaTerdampak: 210,
@@ -325,33 +309,9 @@ export const INITIAL_REPORTS = [
     nomorBast: 'BAST/REVIT-SD/3526/X/2026/089',
     skorKelayakanAfter: 98,
     fiturInklusiAfter: ['Jalur Kursi Roda (Ramp Landai 7°)', 'Toilet Inklusif Ramah Disabilitas dengan Handrail', 'Ventilasi Silang & Pencahayaan Alami Standar', 'Struktur Atap Baja Ringan Tahan Gempa'],
-    fotosBefore: [
-      createFieldPhotoPlaceholder({
-        title: 'SDN Tanah Merah 1 Bangkalan · SEBELUM (Before)',
-        subtitle: 'Atap genteng ambrol & kusen lapuk di 6 ruang kelas',
-        coords: '-7.0865° S, 112.8421° E (±3.5m)',
-        date: '2026-06-14 08:30 WIB',
-        stage: 'before',
-      }),
-    ],
-    fotosProgress: [
-      createFieldPhotoPlaceholder({
-        title: 'SDN Tanah Merah 1 · PROGRES (On-Progress 55%)',
-        subtitle: 'Perkuatan struktur dinding & instalasi rangka atap baru',
-        coords: '-7.0865° S, 112.8421° E (±3.2m)',
-        date: '2026-08-22 13:45 WIB',
-        stage: 'progress',
-      }),
-    ],
-    fotosAfter: [
-      createFieldPhotoPlaceholder({
-        title: 'SDN Tanah Merah 1 · SESUDAH (After 100%)',
-        subtitle: '6 Ruang Kelas Baru, Ramp Kursi Roda, Toilet Inklusif & Ruang UKS',
-        coords: '-7.0865° S, 112.8421° E (±2.9m)',
-        date: '2026-10-29 11:00 WIB',
-        stage: 'after',
-      }),
-    ],
+    fotosBefore: [SAMPLE_IMG_BEFORE],
+    fotosProgress: [SAMPLE_IMG_PROGRESS],
+    fotosAfter: [SAMPLE_IMG_AFTER],
     catatanDinas: 'Audit akhir selesai. Seluruh 6 ruang kelas, UKS, dan toilet ramah disabilitas telah memenuhi standar bangunan gedung ramah anak dan inklusif.',
   },
 ]

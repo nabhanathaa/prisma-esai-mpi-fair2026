@@ -136,7 +136,7 @@ export default function App() {
           </div>
           <div>
             <b>PRISMA</b>
-            <span>Spasial &amp; Inklusi · 2025</span>
+            <span className="brand-sub">Spasial &amp; Inklusi - 2025</span>
           </div>
         </div>
 

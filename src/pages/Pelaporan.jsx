@@ -8,23 +8,27 @@ import {
   Building2, Landmark, UserCheck, Sparkles, Clock, ArrowUpRight,
   Check, X, Eye, Hammer, Award, Phone, Mail, User, Move
 } from 'lucide-react'
-import { INITIAL_REPORTS, createFieldPhotoPlaceholder, fmt, LOGO_URL } from '../lib/data'
+import {
+  INITIAL_REPORTS, createFieldPhotoPlaceholder, fmt, LOGO_URL,
+  SAMPLE_IMG_BEFORE,
+  SAMPLE_IMG_BEFORE_ONLINE, SAMPLE_IMG_PROGRESS_ONLINE, SAMPLE_IMG_AFTER_ONLINE
+} from '../lib/data'
 
 // Custom Pin Icon untuk Leaflet yang mendukung Drag & Drop
 const pinIcon = L.divIcon({
   className: 'custom-gps-pin',
-  html: `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0B3B75,#0284C7);border:3px solid #fff;box-shadow:0 4px 14px rgba(2,132,199,0.65);display:grid;place-items:center;color:#fff;font-weight:bold;font-size:14px;cursor:grab;">📍</div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  html: `<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0B3B75,#0284C7);border:3px solid #fff;box-shadow:0 4px 16px rgba(2,132,199,0.75);display:grid;place-items:center;color:#fff;font-weight:bold;font-size:16px;cursor:grab;">📍</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
 })
 
-function MapController({ center }) {
+function MapController({ center, zoom }) {
   const map = useMap()
   useEffect(() => {
     if (center && Array.isArray(center) && !Number.isNaN(center[0]) && !Number.isNaN(center[1])) {
-      map.flyTo(center, Math.max(map.getZoom(), 9), { duration: 0.8 })
+      map.flyTo(center, zoom || 17, { duration: 0.8 })
     }
-  }, [center, map])
+  }, [center, zoom, map])
   return null
 }
 
@@ -60,13 +64,15 @@ function DraggableLocationPicker({ position, onPick }) {
   ) : null
 }
 
-const FASILITAS_LIST = [
-  'Ruang Kelas Utama & Rangka Atap',
-  'Sanitasi / Toilet Ramah Disabilitas',
-  'Aksesibilitas Inklusif (Ramp Kursi Roda & Jalur Pemandu)',
-  'Perpustakaan & Ruang Literasi',
-  'Laboratorium Sains / Komputer',
-  'Ruang UKS & Layanan Inklusi',
+const FASILITAS_OPTIONS = [
+  { id: 'kelas', label: 'Ruang Kelas Utama & Rangka Atap', icon: '🏫' },
+  { id: 'toilet', label: 'Sanitasi / Toilet / Kamar Mandi Siswa', icon: '🚻' },
+  { id: 'uks', label: 'Ruang UKS (Kesehatan Sekolah)', icon: '🏥' },
+  { id: 'perpus', label: 'Perpustakaan & Ruang Literasi', icon: '📚' },
+  { id: 'mushala', label: 'Mushala / Ruang Ibadah', icon: '🕌' },
+  { id: 'kantin', label: 'Kantin & Area Makan Sehat', icon: '🍽️' },
+  { id: 'lab', label: 'Laboratorium Sains / Komputer', icon: '🔬' },
+  { id: 'ramp', label: 'Aksesibilitas / Ramp Kursi Roda Disabilitas', icon: '♿' },
 ]
 
 const TINGKAT_KERUSAKAN = [
@@ -134,19 +140,32 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   const [npsn, setNpsn] = useState('')
   const [jenjang, setJenjang] = useState('SD')
   const [alamatSekolah, setAlamatSekolah] = useState('')
-  const [fasilitas, setFasilitas] = useState(FASILITAS_LIST[0])
+  const [selectedFasilitas, setSelectedFasilitas] = useState([
+    'Ruang Kelas Utama & Rangka Atap',
+    'Sanitasi / Toilet / Kamar Mandi Siswa',
+  ])
   const [tingkat, setTingkat] = useState('Rusak Berat')
   const [ruangTerdampak, setRuangTerdampak] = useState(3)
   const [siswaTerdampak, setSiswaTerdampak] = useState(95)
   const [selectedFlags, setSelectedFlags] = useState([INKLUSI_FLAGS[0], INKLUSI_FLAGS[1]])
   const [deskripsi, setDeskripsi] = useState('')
 
-  // State Geotagging Realtime
+  // State Geotagging Realtime & Deep Zoom
   const [lat, setLat] = useState(-1.6142)
   const [lng, setLng] = useState(123.4985)
+  const [mapCenter, setMapCenter] = useState([-1.6142, 123.4985])
+  const [mapZoom, setMapZoom] = useState(17) // Zoomed in close to street/building level!
   const [akurasi, setAkurasi] = useState(4.5)
-  const [gpsStatus, setGpsStatus] = useState('Geser pin 📍 pada peta atau klik tombol GPS untuk mengunci titik koordinat sekolah.')
+  const [gpsStatus, setGpsStatus] = useState('Peta di-zoom dekat level bangunan sekolah. Geser pin 📍 atau klik GPS realtime.')
   const [gpsLoading, setGpsLoading] = useState(false)
+
+  const toggleFasilitas = (itemLabel) => {
+    setSelectedFasilitas(prev =>
+      prev.includes(itemLabel)
+        ? prev.length > 1 ? prev.filter(f => f !== itemLabel) : prev
+        : [...prev, itemLabel]
+    )
+  }
 
   // State Foto & Video (Maks 5)
   const [mediaFiles, setMediaFiles] = useState([])
@@ -195,9 +214,13 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
     const feat = geo.features.find(f => f.properties?.kode_bps === targetKode)
     if (feat) {
       const center = L.geoJSON(feat).getBounds().getCenter()
-      setLat(Number(center.lat.toFixed(5)))
-      setLng(Number(center.lng.toFixed(5)))
-      setGpsStatus(`Peta otomatis diarahkan ke wilayah ${targetNama || targetKode}. Anda dapat menggeser pin 📍 ke titik sekolah.`)
+      const nLat = Number(center.lat.toFixed(5))
+      const nLng = Number(center.lng.toFixed(5))
+      setLat(nLat)
+      setLng(nLng)
+      setMapCenter([nLat, nLng])
+      setMapZoom(16)
+      setGpsStatus(`Peta otomatis diarahkan ke ${targetNama || targetKode} & di-zoom presisi. Geser pin 📍 ke bangunan sekolah.`)
     }
   }
 
@@ -262,33 +285,40 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
     setShowVerifyModal(false)
   }
 
-  // Fungsi Ambil Geotagging GPS Realtime
+  // Fungsi Ambil Geotagging GPS Realtime & Auto Deep Zoom
   const handleGetRealtimeGPS = () => {
     setGpsLoading(true)
     setGpsStatus('Mendeteksi sinyal satelit GPS perangkat Anda secara realtime...')
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         pos => {
-          setLat(Number(pos.coords.latitude.toFixed(5)))
-          setLng(Number(pos.coords.longitude.toFixed(5)))
+          const newLat = Number(pos.coords.latitude.toFixed(5))
+          const newLng = Number(pos.coords.longitude.toFixed(5))
+          setLat(newLat)
+          setLng(newLng)
+          setMapCenter([newLat, newLng])
+          setMapZoom(17) // Auto Deep Zoom ke level bangunan/atap sekolah!
           setAkurasi(Number((pos.coords.accuracy || 3.8).toFixed(1)))
           setGpsLoading(false)
-          setGpsStatus('Titik koordinat GPS perangkat berhasil dikunci secara realtime!')
+          setGpsStatus('GPS berhasil dikunci & peta di-zoom dekat (level bangunan)! Geser pin 📍 tepat pada ruang yang rusak.')
         },
         () => {
-          const jitterLat = Number((lat + (Math.random() - 0.5) * 0.008).toFixed(5))
-          const jitterLng = Number((lng + (Math.random() - 0.5) * 0.008).toFixed(5))
+          const jitterLat = Number((lat + (Math.random() - 0.5) * 0.002).toFixed(5))
+          const jitterLng = Number((lng + (Math.random() - 0.5) * 0.002).toFixed(5))
           setLat(jitterLat)
           setLng(jitterLng)
+          setMapCenter([jitterLat, jitterLng])
+          setMapZoom(17) // Auto Deep Zoom!
           setAkurasi(3.6)
           setGpsLoading(false)
-          setGpsStatus('Koordinat Geotagging dikunci pada titik satuan pendidikan terpilih.')
+          setGpsStatus('Koordinat Geotagging dikunci & peta di-zoom dekat level bangunan sekolah.')
         },
-        { enableHighAccuracy: true, timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 6000 }
       )
     } else {
+      setMapZoom(17)
       setGpsLoading(false)
-      setGpsStatus('Koordinat Geotagging aktif.')
+      setGpsStatus('Peta di-zoom dekat level bangunan sekolah.')
     }
   }
 
@@ -400,7 +430,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
     } else {
       const placeholderUrl = createFieldPhotoPlaceholder({
         title: `${namaSekolah || 'Satuan Pendidikan'} · ${selectedKab?.nama || ''}`,
-        subtitle: `${fasilitas} (${tingkat})`,
+        subtitle: `${selectedFasilitas.join(', ')} (${tingkat})`,
         coords: coordsText,
         date: timestamp,
         stage: 'before',
@@ -460,13 +490,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
             const ticketId = `PRISMA-2026-${Math.floor(8500 + Math.random() * 1400)}`
             const nowStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
                            new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
-            const defaultPhoto = createFieldPhotoPlaceholder({
-              title: `${namaSekolah.trim()} · ${selectedKab?.nama}`,
-              subtitle: `${fasilitas} (${tingkat})`,
-              coords: `${lat.toFixed(4)}° S, ${lng.toFixed(4)}° E`,
-              date: nowStr,
-              stage: 'before',
-            })
+            const defaultPhoto = SAMPLE_IMG_BEFORE
             const newReport = {
               id: ticketId,
               tanggal: nowStr,
@@ -487,7 +511,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
               lat,
               lng,
               akurasi,
-              fasilitas,
+              fasilitas: selectedFasilitas,
               tingkat,
               ruangTerdampak: Number(ruangTerdampak) || 1,
               siswaTerdampak: Number(siswaTerdampak) || 30,
@@ -805,14 +829,45 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                   <span>{gpsStatus}</span>
                 </div>
 
+                <div className="map-zoom-shortcuts">
+                  <button
+                    type="button"
+                    className={`mzs-btn ${mapZoom >= 16 ? 'active' : ''}`}
+                    onClick={() => {
+                      setMapZoom(17)
+                      setMapCenter([lat, lng])
+                    }}
+                  >
+                    🔍 Zoom Dekat (Level Bangunan Sekolah)
+                  </button>
+                  <button
+                    type="button"
+                    className={`mzs-btn ${mapZoom < 16 ? 'active' : ''}`}
+                    onClick={() => {
+                      setMapZoom(12)
+                      setMapCenter([lat, lng])
+                    }}
+                  >
+                    🗺️ Zoom Wilayah Kecamatan / Kota
+                  </button>
+                </div>
+
                 <div className="gps-coords-grid">
                   <label className="rf-field">
                     <span>Latitude (Lintang)</span>
-                    <input type="number" step="0.0001" value={lat} onChange={e => setLat(Number(e.target.value))} />
+                    <input type="number" step="0.0001" value={lat} onChange={e => {
+                      const v = Number(e.target.value)
+                      setLat(v)
+                      setMapCenter([v, lng])
+                    }} />
                   </label>
                   <label className="rf-field">
                     <span>Longitude (Bujur)</span>
-                    <input type="number" step="0.0001" value={lng} onChange={e => setLng(Number(e.target.value))} />
+                    <input type="number" step="0.0001" value={lng} onChange={e => {
+                      const v = Number(e.target.value)
+                      setLng(v)
+                      setMapCenter([lat, v])
+                    }} />
                   </label>
                   <label className="rf-field">
                     <span>Akurasi Sinyal GPS</span>
@@ -821,23 +876,24 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                 </div>
 
                 <div className="mini-map-box">
-                  <MapContainer center={[lat, lng]} zoom={8} className="mini-leaflet-map" scrollWheelZoom={true}>
+                  <MapContainer center={mapCenter} zoom={mapZoom} className="mini-leaflet-map" scrollWheelZoom={true}>
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution="&copy; OpenStreetMap"
+                      attribution="&copy; OpenStreetMap contributors"
                     />
-                    <MapController center={[lat, lng]} />
+                    <MapController center={[lat, lng]} zoom={mapZoom} />
                     <DraggableLocationPicker
                       position={[lat, lng]}
                       onPick={(newLat, newLng, msg) => {
                         setLat(Number(newLat.toFixed(5)))
                         setLng(Number(newLng.toFixed(5)))
+                        setMapCenter([Number(newLat.toFixed(5)), Number(newLng.toFixed(5))])
                         if (msg) setGpsStatus(msg)
                       }}
                     />
                   </MapContainer>
                   <div className="mini-map-caption">
-                    💡 <b>Tips Interaktif:</b> Anda dapat <b>menyeret (drag &amp; drop) pin 📍</b> atau <b>mengklik titik mana pun di peta</b> untuk menyesuaikan lokasi presisi sekolah.
+                    💡 <b>Tips Interaktif:</b> Peta sudah di-zoom presisi. Anda dapat <b>menyeret (drag &amp; drop) pin 📍</b> tepat di atas bangunan kelas yang rusak atau <b>mengklik titik mana pun di peta</b>.
                   </div>
                 </div>
               </section>
@@ -977,18 +1033,40 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                   </label>
                 </div>
 
+                <div className="rf-field full">
+                  <div className="rf-label-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700 }}>Komponen Prasarana / Ruang Rusak (Bisa Pilih Lebih Dari 1) *</span>
+                    <small className="muted">{selectedFasilitas.length} komponen dipilih</small>
+                  </div>
+                  <div className="fasilitas-multi-grid">
+                    {FASILITAS_OPTIONS.map(opt => {
+                      const isSel = selectedFasilitas.includes(opt.label)
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`fasilitas-chip-btn ${isSel ? 'selected' : ''}`}
+                          onClick={() => toggleFasilitas(opt.label)}
+                        >
+                          <span className="fc-icon">{opt.icon}</span>
+                          <span className="fc-label">{opt.label}</span>
+                          <span className="fc-check">{isSel ? '✓' : '+'}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 <div className="rf-row2">
                   <label className="rf-field">
-                    <span>Komponen Prasarana Utama</span>
-                    <select value={fasilitas} onChange={e => setFasilitas(e.target.value)}>
-                      {FASILITAS_LIST.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
-                  </label>
-                  <label className="rf-field">
-                    <span>Tingkat Kerusakan / Urgensi</span>
+                    <span>Tingkat Kerusakan / Urgensi Terparah</span>
                     <select value={tingkat} onChange={e => setTingkat(e.target.value)}>
                       {TINGKAT_KERUSAKAN.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                     </select>
+                  </label>
+                  <label className="rf-field">
+                    <span>Kesiapan Revitalisasi</span>
+                    <input type="text" value="Prioritas Tinggi (Sesuai Skor PRISMA)" readOnly />
                   </label>
                 </div>
 
@@ -1067,14 +1145,30 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
               </div>
             </div>
 
+            {/* Banner Keterangan Data Contoh Prototipe */}
+            <div className="prototype-disclaimer-box">
+              <div className="pdb-icon"><AlertTriangle size={18} /></div>
+              <div>
+                <b>Keterangan Data &amp; Foto Simulasi (Prototipe):</b> Informasi satuan pendidikan dan dokumentasi foto di bawah ini merupakan <b>data contoh demonstrasi prototipe PRISMA</b> (bukan data riil kondisi sekolah terkait) yang dihimpun untuk mensimulasikan alur verifikasi siklus <i>Before–Progress–After</i> secara interaktif.
+              </div>
+            </div>
+
             <div className="reports-feed">
               {reports.map(r => (
                 <article key={r.id} className="report-item-card">
                   <div className="ric-photo">
-                    <img src={r.fotosAfter?.[0] || r.fotosProgress?.[0] || r.fotosBefore?.[0]} alt={r.sekolah} />
+                    <img
+                      src={r.fotosAfter?.[0] || r.fotosProgress?.[0] || r.fotosBefore?.[0]}
+                      alt={r.sekolah}
+                      onError={(e) => {
+                        e.target.onerror = null
+                        e.target.src = r.statusTahap === 'after' ? SAMPLE_IMG_AFTER_ONLINE : r.statusTahap === 'progress' ? SAMPLE_IMG_PROGRESS_ONLINE : SAMPLE_IMG_BEFORE_ONLINE
+                      }}
+                    />
                     <span className={`ric-stage-badge ${r.statusTahap}`}>
                       {r.statusTahap === 'before' ? 'BEFORE · PENGAJUAN' : r.statusTahap === 'progress' ? `ON-PROGRESS · ${r.progresPersen}%` : 'AFTER · SELESAI 100%'}
                     </span>
+                    <span className="ric-mock-badge">Contoh Data Prototipe</span>
                   </div>
                   <div className="ric-body">
                     <div className="ric-top">
@@ -1088,7 +1182,11 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                     </p>
                     <p className="ric-desc">{r.deskripsi}</p>
                     <div className="ric-flags">
-                      <span className="ric-chip">{r.fasilitas}</span>
+                      {Array.isArray(r.fasilitas) ? (
+                        r.fasilitas.map(f => <span key={f} className="ric-chip highlight">{f}</span>)
+                      ) : (
+                        (r.fasilitas || '').split(' + ').map(f => <span key={f} className="ric-chip highlight">{f}</span>)
+                      )}
                       <span className="ric-chip warn">{r.tingkat} ({r.ruangTerdampak} ruang · {r.siswaTerdampak} siswa)</span>
                       {r.inklusiFlags?.slice(0, 2).map(f => <span key={f} className="ric-chip">{f}</span>)}
                     </div>
@@ -1224,11 +1322,19 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                       </div>
                       <div className="pcc-photos">
                         <figure>
-                          <img src={r.fotosBefore?.[0]} alt="Before" />
+                          <img
+                            src={r.fotosBefore?.[0]}
+                            alt="Before"
+                            onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG_BEFORE_ONLINE; }}
+                          />
                           <figcaption>Kondisi Awal (Before)</figcaption>
                         </figure>
                         <figure>
-                          <img src={r.fotosProgress?.[0] || r.fotosAfter?.[0] || r.fotosBefore?.[0]} alt="On Progress" />
+                          <img
+                            src={r.fotosProgress?.[0] || r.fotosAfter?.[0] || r.fotosBefore?.[0]}
+                            alt="On Progress"
+                            onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG_PROGRESS_ONLINE; }}
+                          />
                           <figcaption>Progres Konstruksi ({r.progresPersen}%)</figcaption>
                         </figure>
                       </div>
@@ -1357,11 +1463,19 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
 
                         <div className="ac-comparison">
                           <figure className="ac-fig before">
-                            <img src={r.fotosBefore?.[0]} alt="Before" />
+                            <img
+                              src={r.fotosBefore?.[0]}
+                              alt="Before"
+                              onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG_BEFORE_ONLINE; }}
+                            />
                             <figcaption>SEBELUM (BEFORE): {r.tingkat}</figcaption>
                           </figure>
                           <figure className="ac-fig after">
-                            <img src={r.fotosAfter?.[0] || r.fotosBefore?.[0]} alt="After" />
+                            <img
+                              src={r.fotosAfter?.[0] || r.fotosBefore?.[0]}
+                              alt="After"
+                              onError={(e) => { e.target.onerror = null; e.target.src = SAMPLE_IMG_AFTER_ONLINE; }}
+                            />
                             <figcaption>SESUDAH (AFTER): 100% Layak &amp; Inklusif</figcaption>
                           </figure>
                         </div>
@@ -1540,7 +1654,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                   <dt>Koordinat Geotagging</dt>
                   <dd>{submittedTicket.lat.toFixed(5)}°, {submittedTicket.lng.toFixed(5)}° (Akurasi ±{submittedTicket.akurasi}m)</dd>
                   <dt>Kondisi Dilaporkan</dt>
-                  <dd>{submittedTicket.fasilitas} — <b>{submittedTicket.tingkat}</b> ({submittedTicket.ruangTerdampak} ruang)</dd>
+                  <dd>{Array.isArray(submittedTicket.fasilitas) ? submittedTicket.fasilitas.join(', ') : submittedTicket.fasilitas} — <b>{submittedTicket.tingkat}</b> ({submittedTicket.ruangTerdampak} ruang)</dd>
                   <dt>Pelapor Terverifikasi</dt>
                   <dd>{submittedTicket.pelapor} ({submittedTicket.email})</dd>
                   <dt>Diteruskan Kepada</dt>
