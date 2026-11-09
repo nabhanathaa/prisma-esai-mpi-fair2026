@@ -34,8 +34,8 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
       id: 'welcome',
       sender: 'bot',
       time: 'Baru saja',
-      title: 'Halo! Saya PRISMA AI Copilot 👋',
-      text: `Selamat datang, **${user?.nama || 'Pengguna'}** (${user?.badge || 'Portal PRISMA'}). Saya terhubung langsung dengan basis data **514 Kabupaten/Kota (2,03 juta ruang kelas Dapodik 2025)**, hasil ekonometrika spasial, dan sistem pelaporan geotagging.\n\nAnda bisa bertanya tentang **kondisi kabupaten/kota mana pun di Indonesia**, **perbandingan antarwilayah**, **rumus & statistik PRISMA**, atau **panduan melapor sekolah rusak**.`,
+      title: 'Asisten Analitik PRISMA',
+      text: `Selamat datang, **${user?.nama || 'Pengguna'}** (${user?.badge || 'Portal PRISMA'}). Asisten ini terhubung langsung dengan basis data **514 Kabupaten/Kota (2,03 juta ruang kelas Dapodik 2025)**, hasil ekonometrika spasial, dan modul pelaporan geotagging.\n\nSilakan tanyakan **profil kabupaten/kota mana pun di Indonesia**, **komparasi antarwilayah**, **metodologi & statistik PRISMA**, atau **prosedur pelaporan sekolah rusak**.`,
       actions: [
         { label: 'Buka Form Lapor & Geotag', page: 'pelaporan' },
         { label: 'Eksplorasi Peta 514 Kab/Kota', page: 'peta' },
@@ -117,7 +117,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
           `• **Total Ruang Kelas:** **${fmtInt(d.jumlah_total)} ruang** (Rusak sedang+berat: **${fmt(d.pct_rusak_sedang_berat, 1)}%**; Rusak berat: **${fmtInt(d.rusak_berat_total)} ruang** atau **${fmt(d.pct_rusak_berat, 1)}%**)\n` +
           `• **Rincian Rusak Berat per Jenjang:** SD **${fmt(d.pct_rb_sd, 1)}%**, SMP **${fmt(d.pct_rb_smp, 1)}%**, SMA **${fmt(d.pct_rb_sma, 1)}%**, SMK **${fmt(d.pct_rb_smk, 1)}%**\n` +
           `• **Sosial-Fiskal & Spasial:** Kemiskinan (P0) **${fmt(d.p0_persen, 2)}%**, Rata-rata Lama Sekolah **${fmt(d.rls_tahun, 2)} tahun**, Rasio Fiskal **${fmt(d.rasio_kapasitas_fiskal, 3)}** (${d.kategori_kapasitas_fiskal}), Klaster LISA: **${d.lisa}**.\n\n` +
-          `💡 **Rekomendasi Kebijakan:** ${isTopPriority ? `Wilayah ini masuk dalam **Kuintil Teratas (Top 20% Prioritas Nasional)** sehingga wajib diprioritaskan pada **Jalur Afirmasi PRISMA**.` : `Wilayah ini berada di luar kuintil teratas nasional, sehingga penanganan dapat difokuskan secara selektif pada sekolah yang dilaporkan rusak berat melalui modul Geotagging.`}`,
+          `**Rekomendasi Kebijakan:** ${isTopPriority ? `Wilayah ini masuk dalam **Kuintil Teratas (Top 20% Prioritas Nasional)** sehingga diprioritaskan pada **Jalur Afirmasi PRISMA**.` : `Wilayah ini berada di luar kuintil teratas nasional, sehingga penanganan dapat difokuskan secara selektif pada satuan pendidikan yang dilaporkan rusak berat melalui modul Geotagging.`}`,
         actions: [
           { label: `Lihat ${d.nama.replace('Kabupaten ', 'Kab. ')} di Peta`, page: 'peta', kode: d.kode_bps },
           { label: 'Laporkan Sekolah di Wilayah Ini', page: 'pelaporan' },
@@ -152,7 +152,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
         text:
           `Fitur **Pelaporan & Pemantauan Progres** di PRISMA dirancang dalam 3 tahapan terintegrasi:\n\n` +
           `1. **Verifikasi Akun Anti-Bot & Anti-Spam:** Untuk melihat peta dan daftar pantauan publik, Anda **tidak perlu verifikasi**. Namun sebelum mengirim laporan baru, klik tombol **Verifikasi Akun Pelapor** (isi Nama, Gmail, No. HP, dan verifikasi anti-bot/OTP).\n` +
-          `2. **Ajukan Laporan Kondisi (Before):**\n   • Pilih **Provinsi** & **Kabupaten/Kota** (peta otomatis mengarah ke wilayah tersebut).\n   • Isi **Nama Sekolah**, **NPSN**, jenis fasilitas, dan tingkat kerusakan.\n   • **Geser pin 📍 di peta** atau klik **Ambil GPS Realtime** untuk mengunci titik koordinat.\n   • Ambil **Foto/Video Kamera Langsung** atau **Upload Galeri (maks. 5 file)** lalu klik **Kirim Laporan**. Anda akan mendapat **E-Tiket Resmi** yang diteruskan ke **Pusdatin Kemendikdasmen & Dinas Pendidikan**.\n` +
+          `2. **Ajukan Laporan Kondisi (Before):**\n   • Pilih **Provinsi** & **Kabupaten/Kota** (peta otomatis mengarah ke wilayah tersebut).\n   • Isi **Nama Sekolah**, **NPSN**, jenis fasilitas, dan tingkat kerusakan.\n   • **Geser pin biru di peta** atau klik **Ambil GPS Realtime** untuk mengunci titik koordinat.\n   • Ambil **Foto/Video Kamera Langsung** atau **Upload Galeri (maks. 5 file)** lalu klik **Kirim Laporan**. Anda akan mendapat **E-Tiket Resmi** yang diteruskan ke **Pusdatin Kemendikdasmen & Dinas Pendidikan**.\n` +
           `3. **Progres (On-Progress) & Selesai (After):** Dikhususkan bagi **Peran 1 (Analis Pusat)** dan **Peran 2 (Dinas/Sekolah)** untuk memperbarui persentase fisik konstruksi dan pengesahan BAST ramah disabilitas.`,
         actions: [
           { label: 'Buka Menu Pelaporan & Geotag', page: 'pelaporan' },
@@ -234,7 +234,7 @@ export default function Chatbot({ data, user, go, onSwitchRole }) {
       title: 'Ringkasan Data Nasional PRISMA & Bantuan Cepat',
       text:
         `Secara nasional pada tahun 2025 terdapat **${fmtInt(tot.jumlah)} ruang kelas** (SD, SMP, SMA, SMK), di mana **${fmt(tot.pct_sedang_berat, 1)}% (${fmtInt(tot.rusak_sedang + tot.rusak_berat)} ruang)** berada dalam kondisi rusak sedang hingga rusak berat, termasuk **${fmtInt(tot.rusak_berat)} ruang rusak berat (${fmt(tot.pct_berat, 1)}%)**.\n\n` +
-        `💡 **Tips Pencarian Cepat di Chatbot:**\n` +
+        `**Panduan Pencarian Cepat:**\n` +
         `• Ketik nama **Kabupaten/Kota** mana saja (contoh: *"Banggai Laut"*, *"Lembata"*, *"Bangkalan"*, *"Sleman"*, *"Nias"*) untuk melihat profil lengkapnya.\n` +
         `• Ketik **2 nama wilayah** (contoh: *"Bandingkan Lembata dan Kota Medan"*) untuk komparasi langsung.\n` +
         `• Ketik nama **Provinsi** (contoh: *"Jawa Timur"*, *"Nusa Tenggara Timur"*, *"Papua"*) untuk melihat 5 daerah prioritas teratas di provinsi tersebut.`,

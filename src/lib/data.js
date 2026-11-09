@@ -1,4 +1,8 @@
 // Pemuat data, utilitas statistik spasial, dan data simulasi pelaporan PRISMA
+import fotoSekolahRusak from '../../contoh-bangunan-sekolah-rusak.jpg'
+import fotoSekolahRenovasi from '../../contoh-bangunan-sekolah-sedang-direnovasi.jpg'
+import fotoSekolahSelesai from '../../contoh-bangunan-sekolah-selesai-direnovasi.jpg'
+
 const BASE = import.meta.env.BASE_URL
 
 export const LOGO_URL = `${BASE}LOGO%20PRISMA.PNG`
@@ -195,13 +199,13 @@ export function createFieldPhotoPlaceholder({ title, subtitle, coords, date, sta
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
 
-export const SAMPLE_IMG_BEFORE = `${BASE}contoh-bangunan-sekolah-rusak.jpg`
-export const SAMPLE_IMG_PROGRESS = `${BASE}contoh-bangunan-sekolah-sedang-direnovasi.jpg`
-export const SAMPLE_IMG_AFTER = `${BASE}contoh-bangunan-sekolah-selesai-direnovasi.jpg`
+export const SAMPLE_IMG_BEFORE = fotoSekolahRusak
+export const SAMPLE_IMG_PROGRESS = fotoSekolahRenovasi
+export const SAMPLE_IMG_AFTER = fotoSekolahSelesai
 
-export const SAMPLE_IMG_BEFORE_ONLINE = 'https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1200&q=80'
-export const SAMPLE_IMG_PROGRESS_ONLINE = 'https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?auto=format&fit=crop&w=1200&q=80'
-export const SAMPLE_IMG_AFTER_ONLINE = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80'
+export const SAMPLE_IMG_BEFORE_ONLINE = fotoSekolahRusak
+export const SAMPLE_IMG_PROGRESS_ONLINE = fotoSekolahRenovasi
+export const SAMPLE_IMG_AFTER_ONLINE = fotoSekolahSelesai
 
 export const INITIAL_REPORTS = [
   {

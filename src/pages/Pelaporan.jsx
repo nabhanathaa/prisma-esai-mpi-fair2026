@@ -6,7 +6,9 @@ import {
   Camera, Upload, MapPin, ShieldCheck, CheckCircle2, AlertTriangle,
   Lock, FileCheck2, Send, Trash2, Video, Image as ImageIcon, RefreshCw,
   Building2, Landmark, UserCheck, Sparkles, Clock, ArrowUpRight,
-  Check, X, Eye, Hammer, Award, Phone, Mail, User, Move
+  Check, X, Eye, Hammer, Award, Phone, Mail, User, Move,
+  Droplets, HeartPulse, BookOpen, Compass, Utensils, FlaskConical,
+  Accessibility, ZoomIn, Maximize2, Info, Plus
 } from 'lucide-react'
 import {
   INITIAL_REPORTS, createFieldPhotoPlaceholder, fmt, LOGO_URL,
@@ -14,12 +16,12 @@ import {
   SAMPLE_IMG_BEFORE_ONLINE, SAMPLE_IMG_PROGRESS_ONLINE, SAMPLE_IMG_AFTER_ONLINE
 } from '../lib/data'
 
-// Custom Pin Icon untuk Leaflet yang mendukung Drag & Drop
+// Custom Vector Pin Icon untuk Leaflet yang mendukung Drag & Drop
 const pinIcon = L.divIcon({
   className: 'custom-gps-pin',
-  html: `<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0B3B75,#0284C7);border:3px solid #fff;box-shadow:0 4px 16px rgba(2,132,199,0.75);display:grid;place-items:center;color:#fff;font-weight:bold;font-size:16px;cursor:grab;">📍</div>`,
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
+  html: `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0B3B75,#0284C7);border:3px solid #fff;box-shadow:0 6px 18px rgba(2,132,199,0.55);display:grid;place-items:center;color:#fff;cursor:grab;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg></div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
 })
 
 function MapController({ center, zoom }) {
@@ -46,7 +48,7 @@ function DraggableLocationPicker({ position, onPick }) {
         const marker = markerRef.current
         if (marker != null) {
           const ll = marker.getLatLng()
-          onPick(ll.lat, ll.lng, 'Titik koordinat berhasil digeser (drag & drop) secara presisi.')
+          onPick(ll.lat, ll.lng, 'Titik koordinat berhasil digeser secara presisi.')
         }
       },
     }),
@@ -65,14 +67,14 @@ function DraggableLocationPicker({ position, onPick }) {
 }
 
 const FASILITAS_OPTIONS = [
-  { id: 'kelas', label: 'Ruang Kelas Utama & Rangka Atap', icon: '🏫' },
-  { id: 'toilet', label: 'Sanitasi / Toilet / Kamar Mandi Siswa', icon: '🚻' },
-  { id: 'uks', label: 'Ruang UKS (Kesehatan Sekolah)', icon: '🏥' },
-  { id: 'perpus', label: 'Perpustakaan & Ruang Literasi', icon: '📚' },
-  { id: 'mushala', label: 'Mushala / Ruang Ibadah', icon: '🕌' },
-  { id: 'kantin', label: 'Kantin & Area Makan Sehat', icon: '🍽️' },
-  { id: 'lab', label: 'Laboratorium Sains / Komputer', icon: '🔬' },
-  { id: 'ramp', label: 'Aksesibilitas / Ramp Kursi Roda Disabilitas', icon: '♿' },
+  { id: 'kelas', label: 'Ruang Kelas Utama & Rangka Atap', Icon: Building2 },
+  { id: 'toilet', label: 'Sanitasi / Kamar Mandi Siswa', Icon: Droplets },
+  { id: 'uks', label: 'Ruang UKS (Kesehatan Sekolah)', Icon: HeartPulse },
+  { id: 'perpus', label: 'Perpustakaan & Ruang Literasi', Icon: BookOpen },
+  { id: 'mushala', label: 'Mushala / Ruang Ibadah', Icon: Compass },
+  { id: 'kantin', label: 'Kantin & Area Makan Sehat', Icon: Utensils },
+  { id: 'lab', label: 'Laboratorium Sains / Komputer', Icon: FlaskConical },
+  { id: 'ramp', label: 'Aksesibilitas & Ramp Disabilitas', Icon: Accessibility },
 ]
 
 const TINGKAT_KERUSAKAN = [
@@ -92,13 +94,30 @@ const INKLUSI_FLAGS = [
 
 function loadStoredReports() {
   try {
-    const raw = localStorage.getItem('prisma_reports_v2')
+    localStorage.removeItem('prisma_reports_v2')
+    localStorage.removeItem('prisma_reports_v3')
+    localStorage.removeItem('prisma_reports_v4')
+    const raw = localStorage.getItem('prisma_reports_v5')
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const initMap = Object.fromEntries(INITIAL_REPORTS.map(r => [r.id, r]))
+        return parsed.map(r => {
+          if (initMap[r.id]) {
+            return {
+              ...r,
+              isSample: true,
+              fotosBefore: initMap[r.id].fotosBefore,
+              fotosProgress: initMap[r.id].fotosProgress,
+              fotosAfter: initMap[r.id].fotosAfter,
+            }
+          }
+          return r
+        })
+      }
     }
   } catch {}
-  return INITIAL_REPORTS
+  return INITIAL_REPORTS.map(r => ({ ...r, isSample: true }))
 }
 
 export default function Pelaporan({ data, user, onSwitchRole, go }) {
@@ -156,7 +175,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   const [mapCenter, setMapCenter] = useState([-1.6142, 123.4985])
   const [mapZoom, setMapZoom] = useState(17) // Zoomed in close to street/building level!
   const [akurasi, setAkurasi] = useState(4.5)
-  const [gpsStatus, setGpsStatus] = useState('Peta di-zoom dekat level bangunan sekolah. Geser pin 📍 atau klik GPS realtime.')
+  const [gpsStatus, setGpsStatus] = useState('Peta berada pada tampilan detail bangunan. Geser pin biru atau klik GPS realtime.')
   const [gpsLoading, setGpsLoading] = useState(false)
 
   const toggleFasilitas = (itemLabel) => {
@@ -199,9 +218,9 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   const [afterCatatan, setAfterCatatan] = useState('')
   const [afterSuccess, setAfterSuccess] = useState('')
 
-  // Simpan perubahan laporan ke localStorage
+  // Simpan perubahan laporan ke localStorage v5
   useEffect(() => {
-    try { localStorage.setItem('prisma_reports_v2', JSON.stringify(reports)) } catch {}
+    try { localStorage.setItem('prisma_reports_v5', JSON.stringify(reports)) } catch {}
   }, [reports])
 
   const provList = useMemo(() => [...new Set(kab.map(d => d.provinsi))].sort(), [kab])
@@ -220,7 +239,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
       setLng(nLng)
       setMapCenter([nLat, nLng])
       setMapZoom(16)
-      setGpsStatus(`Peta otomatis diarahkan ke ${targetNama || targetKode} & di-zoom presisi. Geser pin 📍 ke bangunan sekolah.`)
+      setGpsStatus(`Peta diarahkan ke ${targetNama || targetKode} dengan zoom presisi. Geser pin biru ke titik bangunan sekolah.`)
     }
   }
 
@@ -288,7 +307,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
   // Fungsi Ambil Geotagging GPS Realtime & Auto Deep Zoom
   const handleGetRealtimeGPS = () => {
     setGpsLoading(true)
-    setGpsStatus('Mendeteksi sinyal satelit GPS perangkat Anda secara realtime...')
+    setGpsStatus('Mendeteksi sinyal satelit GPS perangkat secara realtime...')
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         pos => {
@@ -297,10 +316,10 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
           setLat(newLat)
           setLng(newLng)
           setMapCenter([newLat, newLng])
-          setMapZoom(17) // Auto Deep Zoom ke level bangunan/atap sekolah!
+          setMapZoom(17)
           setAkurasi(Number((pos.coords.accuracy || 3.8).toFixed(1)))
           setGpsLoading(false)
-          setGpsStatus('GPS berhasil dikunci & peta di-zoom dekat (level bangunan)! Geser pin 📍 tepat pada ruang yang rusak.')
+          setGpsStatus('Titik GPS berhasil dikunci & peta diperbesar ke tingkat bangunan. Geser pin biru tepat pada ruang yang rusak.')
         },
         () => {
           const jitterLat = Number((lat + (Math.random() - 0.5) * 0.002).toFixed(5))
@@ -308,17 +327,17 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
           setLat(jitterLat)
           setLng(jitterLng)
           setMapCenter([jitterLat, jitterLng])
-          setMapZoom(17) // Auto Deep Zoom!
+          setMapZoom(17)
           setAkurasi(3.6)
           setGpsLoading(false)
-          setGpsStatus('Koordinat Geotagging dikunci & peta di-zoom dekat level bangunan sekolah.')
+          setGpsStatus('Koordinat dikunci & peta diperbesar ke tingkat bangunan sekolah.')
         },
         { enableHighAccuracy: true, timeout: 6000 }
       )
     } else {
       setMapZoom(17)
       setGpsLoading(false)
-      setGpsStatus('Peta di-zoom dekat level bangunan sekolah.')
+      setGpsStatus('Peta diperbesar ke tingkat bangunan sekolah.')
     }
   }
 
@@ -816,8 +835,8 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
               <section className="card">
                 <div className="card-head-row">
                   <div>
-                    <h3><MapPin size={18} /> 2 · Geotagging Lokasi &amp; Geser Pin Peta Interaktif</h3>
-                    <p className="muted">Pilih Provinsi &amp; Kab/Kota atau geser pin 📍 secara langsung untuk mengunci titik koordinat sekolah</p>
+                    <h3><MapPin size={18} /> 2 · Titik Koordinat Sekolah (Geotagging Presisi)</h3>
+                    <p className="muted">Pilih wilayah atau geser pin biru pada peta untuk mengunci titik koordinat bangunan sekolah</p>
                   </div>
                   <button type="button" className="btn secondary sm" onClick={handleGetRealtimeGPS} disabled={gpsLoading}>
                     <RefreshCw size={14} className={gpsLoading ? 'spin' : ''} /> Ambil GPS Realtime
@@ -838,7 +857,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                       setMapCenter([lat, lng])
                     }}
                   >
-                    🔍 Zoom Dekat (Level Bangunan Sekolah)
+                    <ZoomIn size={13} /> Zoom Detail Bangunan
                   </button>
                   <button
                     type="button"
@@ -848,7 +867,7 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                       setMapCenter([lat, lng])
                     }}
                   >
-                    🗺️ Zoom Wilayah Kecamatan / Kota
+                    <Maximize2 size={13} /> Tampilan Wilayah Kecamatan
                   </button>
                 </div>
 
@@ -893,7 +912,8 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                     />
                   </MapContainer>
                   <div className="mini-map-caption">
-                    💡 <b>Tips Interaktif:</b> Peta sudah di-zoom presisi. Anda dapat <b>menyeret (drag &amp; drop) pin 📍</b> tepat di atas bangunan kelas yang rusak atau <b>mengklik titik mana pun di peta</b>.
+                    <Info size={14} style={{ flex: 'none', marginTop: 1 }} />
+                    <span>Seret pin biru tepat di atas posisi bangunan yang rusak atau klik titik mana pun pada peta untuk memperbarui koordinat.</span>
                   </div>
                 </div>
               </section>
@@ -902,8 +922,8 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
             {/* KOLOM KANAN: FORMULIR LENGKAP IDENTITAS PELAPOR, PROVINSI/KAB-KOTA, NAMA SEKOLAH & KERUSAKAN */}
             <div className="rf-col">
               <section className="card">
-                <h3><FileCheck2 size={18} /> 3 · Formulir Lokasi Wilayah, Nama Sekolah &amp; Detail Kerusakan</h3>
-                <p className="muted">Pilih Provinsi &amp; Kabupaten/Kota, isi Nama Sekolah beserta kondisinya untuk diintegrasikan dengan Skor Spasial PRISMA</p>
+                <h3><FileCheck2 size={18} /> 3 · Identitas Sekolah &amp; Rincian Kerusakan Prasarana</h3>
+                <p className="muted">Lengkapi data satuan pendidikan dan komponen fasilitas yang terdampak untuk disinkronkan dengan Indeks Spasial PRISMA</p>
 
                 {/* Kotak Ringkasan Identitas Pelapor */}
                 <div className="reporter-id-box">
@@ -1035,12 +1055,13 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
 
                 <div className="rf-field full">
                   <div className="rf-label-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700 }}>Komponen Prasarana / Ruang Rusak (Bisa Pilih Lebih Dari 1) *</span>
+                    <span style={{ fontWeight: 700 }}>Komponen Prasarana / Ruang Rusak (Dapat Dipilih Lebih Dari 1) *</span>
                     <small className="muted">{selectedFasilitas.length} komponen dipilih</small>
                   </div>
                   <div className="fasilitas-multi-grid">
                     {FASILITAS_OPTIONS.map(opt => {
                       const isSel = selectedFasilitas.includes(opt.label)
+                      const IconComp = opt.Icon
                       return (
                         <button
                           key={opt.id}
@@ -1048,9 +1069,9 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
                           className={`fasilitas-chip-btn ${isSel ? 'selected' : ''}`}
                           onClick={() => toggleFasilitas(opt.label)}
                         >
-                          <span className="fc-icon">{opt.icon}</span>
+                          <span className="fc-icon"><IconComp size={15} /></span>
                           <span className="fc-label">{opt.label}</span>
-                          <span className="fc-check">{isSel ? '✓' : '+'}</span>
+                          <span className="fc-check">{isSel ? <Check size={12} /> : <Plus size={12} />}</span>
                         </button>
                       )
                     })}
@@ -1141,68 +1162,73 @@ export default function Pelaporan({ data, user, onSwitchRole, go }) {
             <div className="card-head-row">
               <div>
                 <h3><Eye size={18} /> Daftar Pantauan Laporan &amp; Status Verifikasi Nasional</h3>
-                <p className="muted">Transparansi publik: masyarakat dapat memantau tiket laporan yang telah masuk tanpa harus login/verifikasi ulang</p>
+                <p className="muted">Transparansi publik: masyarakat dapat memantau tiket laporan yang telah masuk tanpa harus login atau verifikasi ulang</p>
               </div>
-            </div>
-
-            {/* Banner Keterangan Data Contoh Prototipe */}
-            <div className="prototype-disclaimer-box">
-              <div className="pdb-icon"><AlertTriangle size={18} /></div>
-              <div>
-                <b>Keterangan Data &amp; Foto Simulasi (Prototipe):</b> Informasi satuan pendidikan dan dokumentasi foto di bawah ini merupakan <b>data contoh demonstrasi prototipe PRISMA</b> (bukan data riil kondisi sekolah terkait) yang dihimpun untuk mensimulasikan alur verifikasi siklus <i>Before–Progress–After</i> secara interaktif.
-              </div>
+              <span className="sim-note-pill">
+                <Info size={13} /> Data Simulasi Prototipe (Bukan Data Riil Sekolah)
+              </span>
             </div>
 
             <div className="reports-feed">
-              {reports.map(r => (
-                <article key={r.id} className="report-item-card">
-                  <div className="ric-photo">
-                    <img
-                      src={r.fotosAfter?.[0] || r.fotosProgress?.[0] || r.fotosBefore?.[0]}
-                      alt={r.sekolah}
-                      onError={(e) => {
-                        e.target.onerror = null
-                        e.target.src = r.statusTahap === 'after' ? SAMPLE_IMG_AFTER_ONLINE : r.statusTahap === 'progress' ? SAMPLE_IMG_PROGRESS_ONLINE : SAMPLE_IMG_BEFORE_ONLINE
-                      }}
-                    />
-                    <span className={`ric-stage-badge ${r.statusTahap}`}>
-                      {r.statusTahap === 'before' ? 'BEFORE · PENGAJUAN' : r.statusTahap === 'progress' ? `ON-PROGRESS · ${r.progresPersen}%` : 'AFTER · SELESAI 100%'}
-                    </span>
-                    <span className="ric-mock-badge">Contoh Data Prototipe</span>
-                  </div>
-                  <div className="ric-body">
-                    <div className="ric-top">
-                      <span className="ric-ticket">{r.id}</span>
-                      <span className="ric-date"><Clock size={12} /> {r.tanggal}</span>
-                      <span className="ric-prisma-tag">Skor PRISMA Wilayah: <b>{fmt(r.skorPrisma, 1)}</b> (#{r.rankPrisma})</span>
+              {reports.map(r => {
+                const displayImg = r.statusTahap === 'after'
+                  ? (r.fotosAfter?.[0] || SAMPLE_IMG_AFTER_ONLINE)
+                  : r.statusTahap === 'progress'
+                    ? (r.fotosProgress?.[0] || SAMPLE_IMG_PROGRESS_ONLINE)
+                    : (r.fotosBefore?.[0] || SAMPLE_IMG_BEFORE_ONLINE)
+
+                return (
+                  <article key={r.id} className="report-item-card">
+                    <div className="ric-photo">
+                      <img
+                        src={displayImg}
+                        alt={r.sekolah}
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = r.statusTahap === 'after' ? SAMPLE_IMG_AFTER_ONLINE : r.statusTahap === 'progress' ? SAMPLE_IMG_PROGRESS_ONLINE : SAMPLE_IMG_BEFORE_ONLINE
+                        }}
+                      />
+                      <span className={`ric-stage-badge ${r.statusTahap}`}>
+                        {r.statusTahap === 'before' ? 'BEFORE · PENGAJUAN' : r.statusTahap === 'progress' ? `ON-PROGRESS · ${r.progresPersen}%` : 'AFTER · SELESAI 100%'}
+                      </span>
                     </div>
-                    <h4>{r.sekolah} <small>({r.jenjang} · NPSN {r.npsn})</small></h4>
-                    <p className="ric-loc">
-                      <MapPin size={13} /> {r.kabkota}, {r.provinsi} · Koordinat GPS: <code>{r.lat.toFixed(4)}°, {r.lng.toFixed(4)}° (±{r.akurasi}m)</code>
-                    </p>
-                    <p className="ric-desc">{r.deskripsi}</p>
-                    <div className="ric-flags">
-                      {Array.isArray(r.fasilitas) ? (
-                        r.fasilitas.map(f => <span key={f} className="ric-chip highlight">{f}</span>)
-                      ) : (
-                        (r.fasilitas || '').split(' + ').map(f => <span key={f} className="ric-chip highlight">{f}</span>)
-                      )}
-                      <span className="ric-chip warn">{r.tingkat} ({r.ruangTerdampak} ruang · {r.siswaTerdampak} siswa)</span>
-                      {r.inklusiFlags?.slice(0, 2).map(f => <span key={f} className="ric-chip">{f}</span>)}
-                    </div>
-                    <div className="ric-footer">
-                      <div>
-                        <small>Pelapor Terverifikasi: <b>{r.pelapor}</b> ({r.peranPelapor})</small>
-                        <small>Tujuan: <b>{r.instansiTujuan}</b></small>
+                    <div className="ric-body">
+                      <div className="ric-top">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span className="ric-ticket">{r.id}</span>
+                          {r.isSample && <span className="ric-sample-tag">Data Contoh</span>}
+                          <span className="ric-date"><Clock size={12} /> {r.tanggal}</span>
+                        </div>
+                        <span className="ric-prisma-tag">Skor PRISMA Wilayah: <b>{fmt(r.skorPrisma, 1)}</b> (#{r.rankPrisma})</span>
                       </div>
-                      <div className="ric-status-box">
-                        <span>{r.statusLabel}</span>
-                        <div className="ric-progbar"><i style={{ width: `${r.progresPersen}%` }} /></div>
+                      <h4>{r.sekolah} <small>({r.jenjang} · NPSN {r.npsn})</small></h4>
+                      <p className="ric-loc">
+                        <MapPin size={13} /> {r.kabkota}, {r.provinsi} · Koordinat GPS: <code>{r.lat.toFixed(4)}°, {r.lng.toFixed(4)}° (±{r.akurasi}m)</code>
+                      </p>
+                      <p className="ric-desc">{r.deskripsi}</p>
+                      <div className="ric-flags">
+                        {Array.isArray(r.fasilitas) ? (
+                          r.fasilitas.map(f => <span key={f} className="ric-chip highlight">{f}</span>)
+                        ) : (
+                          (r.fasilitas || '').split(' + ').map(f => <span key={f} className="ric-chip highlight">{f}</span>)
+                        )}
+                        <span className="ric-chip warn">{r.tingkat} ({r.ruangTerdampak} ruang · {r.siswaTerdampak} siswa)</span>
+                        {r.inklusiFlags?.slice(0, 2).map(f => <span key={f} className="ric-chip">{f}</span>)}
+                      </div>
+                      <div className="ric-footer">
+                        <div>
+                          <small>Pelapor Terverifikasi: <b>{r.pelapor}</b> ({r.peranPelapor})</small>
+                          <small>Tujuan: <b>{r.instansiTujuan}</b></small>
+                        </div>
+                        <div className="ric-status-box">
+                          <span>{r.statusLabel}</span>
+                          <div className="ric-progbar"><i style={{ width: `${r.progresPersen}%` }} /></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                )
+              })}
             </div>
           </section>
         </motion.div>
